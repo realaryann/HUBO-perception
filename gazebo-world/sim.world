@@ -2,7 +2,7 @@
   <world name='default'>
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
-      <pose>0 0 10 0 -0 0</pose>
+      <pose>0 0 0 0 -0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <attenuation>
@@ -72,7 +72,7 @@
       </link>
     </model>
     <model name='camera_model'>
-      <pose>0 0 0.5 0 -0 3.14</pose>
+      <pose>0 0 0 0 -0 0</pose>
       <static>1</static>
       <link name='camera_link'>
         <visual name='visual'>
@@ -149,10 +149,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>532 192000000</sim_time>
-      <real_time>520 474699634</real_time>
-      <wall_time>1718739032 411656940</wall_time>
-      <iterations>517978</iterations>
+      <sim_time>706 354000000</sim_time>
+      <real_time>174 372253945</real_time>
+      <wall_time>1718743571 496734742</wall_time>
+      <iterations>174162</iterations>
       <model name='camera_model'>
         <pose>0.674361 -0.001074 1.25002 0 -0 3.14</pose>
         <scale>1 1 1</scale>
@@ -184,13 +184,13 @@
         </link>
       </model>
       <model name='unit_box'>
-        <pose>-1.26231 -0.21309 1.09414 -3e-06 -1e-06 0.006053</pose>
+        <pose>-1.26231 -0.213091 1.09413 2e-06 3e-06 0.006066</pose>
         <scale>0.158268 0.158268 0.158268</scale>
         <link name='link'>
-          <pose>-1.26231 -0.21309 1.09414 -3e-06 -1e-06 0.006053</pose>
+          <pose>-1.26231 -0.213091 1.09413 2e-06 3e-06 0.006066</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.408724 -0.403801 1.41898 -1.18045 -1.11829 -2e-06</acceleration>
-          <wrench>0.408724 -0.403801 1.41898 0 -0 0</wrench>
+          <acceleration>0.30531 -0.301629 -1.41956 0.670023 -0.71655 -3.14159</acceleration>
+          <wrench>0.30531 -0.301629 -1.41956 0 -0 0</wrench>
         </link>
       </model>
       <light name='sun'>
@@ -199,7 +199,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>2.28961 -5.21033 3.41548 0 0.539643 1.9482</pose>
+        <pose>1.52802 -2.33726 2.22721 0 0.539643 1.9482</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -417,7 +417,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>0.999997 0.999997 0.999997</size>
+              <size>1 1 1</size>
             </box>
           </geometry>
           <max_contacts>10</max_contacts>
@@ -437,7 +437,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>0.999997 0.999997 0.999997</size>
+              <size>1 1 1</size>
             </box>
           </geometry>
           <material>
