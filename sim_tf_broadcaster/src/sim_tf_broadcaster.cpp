@@ -4,6 +4,7 @@
 using namespace std::chrono_literals;
 
 //0.674361 -0.001074 1.25002 0 -0 3.14
+// ros2 run tf2_ros static_transform_publisher 0.67 -0.001 1.25 0 0 -1.57 world camera_link
 
 class Broadcaster : public rclcpp::Node {
 private:
@@ -12,6 +13,7 @@ private:
 
     void _on_timer() {
         geometry_msgs::msg::TransformStamped t;
+        t.header.stamp = this->get_clock()->now();
         t.header.frame_id = "world";
         t.child_frame_id = "camera_link";
         t.transform.translation.x = 0.674361;
@@ -24,7 +26,7 @@ private:
 public:
     Broadcaster() : Node("sim_transform_broadcaster") {
         _broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-        _timer = create_wall_timer(5s, std::bind(&Broadcaster::_on_timer, this));
+        _timer = create_wall_timer(1s, std::bind(&Broadcaster::_on_timer, this));
     }
 }; // class Broadcaster
 
