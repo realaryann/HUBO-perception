@@ -1,5 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "tf2_ros/transform_broadcaster.h"
+#include "tf2_ros/static_transform_broadcaster.h"
+
 
 using namespace std::chrono_literals;
 
@@ -8,10 +10,12 @@ using namespace std::chrono_literals;
 
 class Broadcaster : public rclcpp::Node {
 private:
-    std::unique_ptr<tf2_ros::TransformBroadcaster> _broadcaster;
+    std::shared_ptr<tf2_ros::StaticTransformBroadcaster> _broadcaster;
     rclcpp::TimerBase::SharedPtr _timer;
 
-    void _on_timer() {
+public:
+    Broadcaster() : Node("sim_transform_broadcaster") {
+        _broadcaster = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
         geometry_msgs::msg::TransformStamped t;
         t.header.stamp = this->get_clock()->now();
         t.header.frame_id = "world";
@@ -19,14 +23,9 @@ private:
         t.transform.translation.x = 0.674361;
         t.transform.translation.y = -0.001074;
         t.transform.translation.z = 1.250020;
-        t.transform.rotation.x = 0.9996;
-        t.transform.rotation.w = 0.0273;
-        _broadcaster->sendTransform(t);
-    }
-public:
-    Broadcaster() : Node("sim_transform_broadcaster") {
-        _broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-        _timer = create_wall_timer(1s, std::bind(&Broadcaster::_on_timer, this));
+        t.transform.rotation.x = -0.706825;
+        t.transform.rotation.w = 0.707388;
+        _broadcaster->sendTransform(t);  
     }
 }; // class Broadcaster
 
