@@ -20,8 +20,6 @@ public:
         t.header.stamp = this->get_clock()->now();
         t.header.frame_id = "world";
         t.child_frame_id = "camera_link";
-        t.transform.translation.x = 0.674361;
-        t.transform.translation.y = -0.001074;
         t.transform.translation.z = 1.250020;
         t.transform.rotation.x = -0.706825;
         t.transform.rotation.w = 0.707388;

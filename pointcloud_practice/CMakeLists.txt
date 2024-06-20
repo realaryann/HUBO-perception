@@ -9,7 +9,12 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(rclcpp REQUIRED)
+find_package(rclcpp REQUIRED PATHs /opt/ros/humble)
+find_package(PCL 1.3 REQUIRED) 
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+find_package(pcl_conversions REQUIRED) 
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -24,12 +29,18 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(pointcloud_practice src/pointcloud_practice.cpp)
-ament_target_dependencies(pointcloud_practice rclcpp std_msgs sensor_msgs)
+target_link_libraries(pointcloud_practice ${PCL_LIBRARIES})
+ament_target_dependencies(pointcloud_practice rclcpp std_msgs sensor_msgs pcl_conversions)
 
 install(
   TARGETS
   pointcloud_practice
   DESTINATION lib/${PROJECT_NAME}
+)
+install(
+  DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()
