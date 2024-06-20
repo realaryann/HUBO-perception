@@ -3,6 +3,8 @@
 #include "pcl_conversions/pcl_conversions.h"
 #include "pcl/segmentation/extract_clusters.h"
 #include "pcl/search/kdtree.h"
+
+#include <cstdlib>
 // Run the following to get point cloud information
 // gazebo /opt/ros/humble/share/gazebo_plugins/worlds/gazebo_ros_depth_camera_demo.world
 
@@ -34,8 +36,8 @@ private:
         pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
         std::vector<pcl::PointIndices> cluster_indices;
         ec.setClusterTolerance (0.005); // 2cm
-        ec.setMinClusterSize (1);
-        ec.setMaxClusterSize (100);
+        ec.setMinClusterSize (get_parameter("MIN_CLUSTER_SIZE").as_int());
+        ec.setMaxClusterSize (get_parameter("MAX_CLUSTER_SIZE").as_int());
         ec.setSearchMethod (tree);
         ec.setInputCloud (cloud_filtered_conversion);
         ec.extract (cluster_indices);
@@ -47,17 +49,27 @@ private:
         //     for (auto point : cluster.indices)
         //         sum_heights += (*cloud_filtered_conversion)[point].z;
         // double avg_z = sum_heights / cluster_indices
-
-        for (auto cluster : cluster_indices) {
-            for(auto point : cluster.indices) {
+        for (size_t cluster = 0; cluster < cluster_indices.size(); cluster++) {
+            double red = std::rand() % 256;
+            double green = std::rand() % 256;
+            double blue = std::rand() % 256;
+            for(auto point : cluster_indices[cluster].indices) {
                 float distance2 = (*cloud_filtered_conversion)[point].x * (*cloud_filtered_conversion)[point].x +
                     (*cloud_filtered_conversion)[point].y * (*cloud_filtered_conversion)[point].y +
                     (*cloud_filtered_conversion)[point].z * (*cloud_filtered_conversion)[point].z;
                 // RCLCPP_INFO(this->get_logger(), "z:%lf", (*cloud_filtered_conversion)[point].z);
-                if (distance2 <= MAX_DIST2)
-                    first_cluster_cloud->push_back((*cloud_filtered_conversion)[point]);
+                if (distance2 <= MAX_DIST2) {
+                    auto pt = (*cloud_filtered_conversion)[point];
+                    pt.r = red;
+                    pt.g = green;
+                    pt.b = blue;
+                    first_cluster_cloud->push_back(pt);
+                }
             }
         }
+
+        // planar segmentation
+
         // RCLCPP_INFO(this->get_logger(), "END --------------------\n");
         first_cluster_cloud->width = first_cluster_cloud->size();
         first_cluster_cloud->height = 1;
@@ -76,6 +88,10 @@ public:
     PointCloudParser() : Node("pointcloud_parser") {
         _subscriber = create_subscription<sensor_msgs::msg::PointCloud2>(SUB_TOPIC, 10, std::bind(&PointCloudParser::_on_subscriber, this, std::placeholders::_1));
         _publisher = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_point_cloud", 10);
+        declare_parameter("MIN_CLUSTER_SIZE", 1000);
+        declare_parameter("MAX_CLUSTER_SIZE", 10000);
+        set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 1000));
+        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 10000));
     }
 };
 
