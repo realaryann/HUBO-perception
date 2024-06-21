@@ -30,8 +30,16 @@ private:
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered_conversion(new pcl::PointCloud<pcl::PointXYZRGB>());
         pcl::fromPCLPointCloud2(*cloud_filtered, *cloud_filtered_conversion);
+        
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered_parsed(new pcl::PointCloud<pcl::PointXYZRGB>());
+        for (auto pt : cloud_filtered_conversion->points) {
+            float distance2 = pt.x * pt.x + pt.y * pt.y + pt.z * pt.z;
+            if (pt.z < get_parameter("TABLE_HEIGHT").as_double() && distance2 < MAX_DIST2)
+                cloud_filtered_parsed->push_back(pt);
+        }
+        
         pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
-        tree->setInputCloud(cloud_filtered_conversion);
+        tree->setInputCloud(cloud_filtered_parsed);
 
         pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
         std::vector<pcl::PointIndices> cluster_indices;
@@ -39,7 +47,7 @@ private:
         ec.setMinClusterSize (get_parameter("MIN_CLUSTER_SIZE").as_int());
         ec.setMaxClusterSize (get_parameter("MAX_CLUSTER_SIZE").as_int());
         ec.setSearchMethod (tree);
-        ec.setInputCloud (cloud_filtered_conversion);
+        ec.setInputCloud (cloud_filtered_parsed);
         ec.extract (cluster_indices);
         // log new points
             // RCLCPP_INFO(this->get_logger(), "\nBEGIN --------------------");
@@ -50,22 +58,23 @@ private:
         //         sum_heights += (*cloud_filtered_conversion)[point].z;
         // double avg_z = sum_heights / cluster_indices
         for (size_t cluster = 0; cluster < cluster_indices.size(); cluster++) {
+            pcl::PointXYZRGB cluster_center_pt; 
             double red = std::rand() % 256;
             double green = std::rand() % 256;
             double blue = std::rand() % 256;
+            cluster_center_pt.r = red;
+            cluster_center_pt.g = green;
+            cluster_center_pt.b = blue;
             for(auto point : cluster_indices[cluster].indices) {
-                float distance2 = (*cloud_filtered_conversion)[point].x * (*cloud_filtered_conversion)[point].x +
-                    (*cloud_filtered_conversion)[point].y * (*cloud_filtered_conversion)[point].y +
-                    (*cloud_filtered_conversion)[point].z * (*cloud_filtered_conversion)[point].z;
                 // RCLCPP_INFO(this->get_logger(), "z:%lf", (*cloud_filtered_conversion)[point].z);
-                if (distance2 <= MAX_DIST2) {
-                    auto pt = (*cloud_filtered_conversion)[point];
-                    pt.r = red;
-                    pt.g = green;
-                    pt.b = blue;
-                    first_cluster_cloud->push_back(pt);
-                }
+                cluster_center_pt.x += (*cloud_filtered_parsed)[point].x;
+                cluster_center_pt.y += (*cloud_filtered_parsed)[point].y;
+                cluster_center_pt.z += (*cloud_filtered_parsed)[point].y;
             }
+            cluster_center_pt.x /= cluster_indices[cluster].indices.size();
+            cluster_center_pt.y /= cluster_indices[cluster].indices.size();
+            cluster_center_pt.z /= cluster_indices[cluster].indices.size();
+            first_cluster_cloud->push_back(cluster_center_pt);
         }
 
         // planar segmentation
@@ -90,8 +99,10 @@ public:
         _publisher = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_point_cloud", 10);
         declare_parameter<int>("MIN_CLUSTER_SIZE");
         declare_parameter<int>("MAX_CLUSTER_SIZE");
+        declare_parameter<double>("TABLE_HEIGHT");
         set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 600));
         set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 5000));
+        set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 3.0));
     }
 };
 
