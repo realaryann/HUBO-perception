@@ -58,23 +58,29 @@ private:
         //         sum_heights += (*cloud_filtered_conversion)[point].z;
         // double avg_z = sum_heights / cluster_indices
         for (size_t cluster = 0; cluster < cluster_indices.size(); cluster++) {
-            pcl::PointXYZRGB cluster_center_pt; 
+            pcl::PointXYZRGB cluster_center_pt;
+            cluster_center_pt.x = 0; 
+            cluster_center_pt.y = 0; 
+            cluster_center_pt.z = 0;
+            // RCLCPP_INFO(this->get_logger(), "point: (%lf, %lf, %lf)", cluster_center_pt.x, cluster_center_pt.y, cluster_center_pt.z);
             double red = std::rand() % 256;
             double green = std::rand() % 256;
             double blue = std::rand() % 256;
             cluster_center_pt.r = red;
             cluster_center_pt.g = green;
             cluster_center_pt.b = blue;
+            cluster_center_pt.a = 0.05;
             for(auto point : cluster_indices[cluster].indices) {
                 // RCLCPP_INFO(this->get_logger(), "z:%lf", (*cloud_filtered_conversion)[point].z);
-                cluster_center_pt.x += (*cloud_filtered_parsed)[point].x;
-                cluster_center_pt.y += (*cloud_filtered_parsed)[point].y;
-                cluster_center_pt.z += (*cloud_filtered_parsed)[point].y;
+                cluster_center_pt.x += cloud_filtered_parsed->points[point].x;
+                cluster_center_pt.y += cloud_filtered_parsed->points[point].y;
+                cluster_center_pt.z += cloud_filtered_parsed->points[point].z;
             }
             cluster_center_pt.x /= cluster_indices[cluster].indices.size();
             cluster_center_pt.y /= cluster_indices[cluster].indices.size();
             cluster_center_pt.z /= cluster_indices[cluster].indices.size();
             first_cluster_cloud->push_back(cluster_center_pt);
+            // RCLCPP_INFO(this->get_logger(), "point: (%lf, %lf, %lf)", cluster_center_pt.x, cluster_center_pt.y, cluster_center_pt.z);
         }
 
         // planar segmentation

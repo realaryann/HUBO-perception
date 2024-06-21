@@ -16,6 +16,7 @@ def generate_launch_description():
             parameters=[
                 {'MIN_CLUSTER_SIZE' : 500},
                 {'MAX_CLUSTER_SIZE' : 5000},
+                {'TABLE_HEIGHT' : 3.0},
             ],
         ),
     ])
