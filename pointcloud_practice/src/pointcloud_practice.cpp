@@ -88,10 +88,10 @@ public:
     PointCloudParser() : Node("pointcloud_parser") {
         _subscriber = create_subscription<sensor_msgs::msg::PointCloud2>(SUB_TOPIC, 10, std::bind(&PointCloudParser::_on_subscriber, this, std::placeholders::_1));
         _publisher = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_point_cloud", 10);
-        declare_parameter("MIN_CLUSTER_SIZE", 1000);
-        declare_parameter("MAX_CLUSTER_SIZE", 10000);
-        set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 1000));
-        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 10000));
+        declare_parameter<int>("MIN_CLUSTER_SIZE");
+        declare_parameter<int>("MAX_CLUSTER_SIZE");
+        set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 600));
+        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 5000));
     }
 };
 
