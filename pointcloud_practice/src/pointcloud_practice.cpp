@@ -32,13 +32,15 @@ private:
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_parsed(new pcl::PointCloud<pcl::PointXYZRGB>());
         for (auto pt : cloud_conversion->points) {
             float distance2 = pt.x * pt.x + pt.y * pt.y + pt.z * pt.z;
-            if (pt.z < get_parameter("TABLE_HEIGHT").as_double() && distance2 < MAX_DIST2)
+            double table_height = get_parameter("TABLE_HEIGHT").as_double();
+            if (pt.z < table_height && distance2 < MAX_DIST2)
                 cloud_parsed->push_back(pt);
         }
 
         // TODO: Do negative of table plane, publish object tfs
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr object_cluster_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
+        *object_cluster_cloud = *cloud_parsed;
 
         // RCLCPP_INFO(this->get_logger(), "END --------------------\n");
         object_cluster_cloud->width = object_cluster_cloud->size();
@@ -58,7 +60,7 @@ public:
         declare_parameter<double>("TABLE_HEIGHT");
         set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 600));
         set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 5000));
-        set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 3.0));
+        set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 2.1));
     }
 };
 
