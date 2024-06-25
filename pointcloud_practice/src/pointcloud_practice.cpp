@@ -22,37 +22,32 @@ private:
         // RCLCPP_INFO(this->get_logger(), "STARTING");
         std::vector<sensor_msgs::msg::PointCloud2> clusters;
         // convert to pcl cloud
-        pcl::PCLPointCloud2 cloud;
-        pcl::PCLPointCloud2::Ptr cloud_filtered(new pcl::PCLPointCloud2());
-        pcl_conversions::toPCL(initial_cloud, cloud);
-        *cloud_filtered = cloud;
+        pcl::PCLPointCloud2::Ptr cloud(new pcl::PCLPointCloud2());
+        pcl_conversions::toPCL(initial_cloud, *cloud);
         // do euclidean grouping
 
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered_conversion(new pcl::PointCloud<pcl::PointXYZRGB>());
-        pcl::fromPCLPointCloud2(*cloud_filtered, *cloud_filtered_conversion);
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_conversion(new pcl::PointCloud<pcl::PointXYZRGB>());
+        pcl::fromPCLPointCloud2(*cloud, *cloud_conversion);
         
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_filtered_parsed(new pcl::PointCloud<pcl::PointXYZRGB>());
-        for (auto pt : cloud_filtered_conversion->points) {
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_parsed(new pcl::PointCloud<pcl::PointXYZRGB>());
+        for (auto pt : cloud_conversion->points) {
             float distance2 = pt.x * pt.x + pt.y * pt.y + pt.z * pt.z;
             if (pt.z < get_parameter("TABLE_HEIGHT").as_double() && distance2 < MAX_DIST2)
-                cloud_filtered_parsed->push_back(pt);
+                cloud_parsed->push_back(pt);
         }
 
-        // planar segmentation
+        // TODO: Do negative of table plane, publish object tfs
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr object_cluster_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
 
         // RCLCPP_INFO(this->get_logger(), "END --------------------\n");
-        first_cluster_cloud->width = first_cluster_cloud->size();
-        first_cluster_cloud->height = 1;
-        first_cluster_cloud->is_dense = true;
-        first_cluster_cloud->header.frame_id = cloud_filtered_conversion->header.frame_id;
+        object_cluster_cloud->width = object_cluster_cloud->size();
+        object_cluster_cloud->height = 1;
+        object_cluster_cloud->is_dense = true;
+        object_cluster_cloud->header.frame_id = cloud_conversion->header.frame_id;
         sensor_msgs::msg::PointCloud2 msg;
-        pcl::toROSMsg(*first_cluster_cloud, msg);
+        pcl::toROSMsg(*object_cluster_cloud, msg);
         _publisher->publish(msg);
-        
-
-        // do later
-        // convert back
-        // publish the edited cloud
     }
 public: 
     PointCloudParser() : Node("pointcloud_parser") {
