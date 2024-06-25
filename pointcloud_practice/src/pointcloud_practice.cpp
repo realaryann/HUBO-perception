@@ -38,51 +38,6 @@ private:
                 cloud_filtered_parsed->push_back(pt);
         }
 
-        pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
-        tree->setInputCloud(cloud_filtered_parsed);
-
-        pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
-        std::vector<pcl::PointIndices> cluster_indices;
-        ec.setClusterTolerance (0.005); // 2cm
-        ec.setMinClusterSize (get_parameter("MIN_CLUSTER_SIZE").as_int());
-        ec.setMaxClusterSize (get_parameter("MAX_CLUSTER_SIZE").as_int());
-        ec.setSearchMethod (tree);
-        ec.setInputCloud (cloud_filtered_parsed);
-        ec.extract (cluster_indices);
-        // log new points
-            // RCLCPP_INFO(this->get_logger(), "\nBEGIN --------------------");
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr first_cluster_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
-        // double sum_heights = 0;
-        // for(auto cluster : cluster_indices)
-        //     for (auto point : cluster.indices)
-        //         sum_heights += (*cloud_filtered_conversion)[point].z;
-        // double avg_z = sum_heights / cluster_indices
-        for (size_t cluster = 0; cluster < cluster_indices.size(); cluster++) {
-            pcl::PointXYZRGB cluster_center_pt;
-            cluster_center_pt.x = 0; 
-            cluster_center_pt.y = 0; 
-            cluster_center_pt.z = 0;
-            // RCLCPP_INFO(this->get_logger(), "point: (%lf, %lf, %lf)", cluster_center_pt.x, cluster_center_pt.y, cluster_center_pt.z);
-            double red = std::rand() % 256;
-            double green = std::rand() % 256;
-            double blue = std::rand() % 256;
-            cluster_center_pt.r = red;
-            cluster_center_pt.g = green;
-            cluster_center_pt.b = blue;
-            cluster_center_pt.a = 0.05;
-            for(auto point : cluster_indices[cluster].indices) {
-                // RCLCPP_INFO(this->get_logger(), "z:%lf", (*cloud_filtered_conversion)[point].z);
-                cluster_center_pt.x += cloud_filtered_parsed->points[point].x;
-                cluster_center_pt.y += cloud_filtered_parsed->points[point].y;
-                cluster_center_pt.z += cloud_filtered_parsed->points[point].z;
-            }
-            cluster_center_pt.x /= cluster_indices[cluster].indices.size();
-            cluster_center_pt.y /= cluster_indices[cluster].indices.size();
-            cluster_center_pt.z /= cluster_indices[cluster].indices.size();
-            first_cluster_cloud->push_back(cluster_center_pt);
-            // RCLCPP_INFO(this->get_logger(), "point: (%lf, %lf, %lf)", cluster_center_pt.x, cluster_center_pt.y, cluster_center_pt.z);
-        }
-
         // planar segmentation
 
         // RCLCPP_INFO(this->get_logger(), "END --------------------\n");
