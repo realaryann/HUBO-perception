@@ -37,7 +37,7 @@ private:
             if (pt.z < get_parameter("TABLE_HEIGHT").as_double() && distance2 < MAX_DIST2)
                 cloud_filtered_parsed->push_back(pt);
         }
-        
+
         pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
         tree->setInputCloud(cloud_filtered_parsed);
 
