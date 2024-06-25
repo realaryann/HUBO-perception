@@ -12,7 +12,7 @@
 // Run the following to get point cloud information
 // gazebo /opt/ros/humble/share/gazebo_plugins/worlds/gazebo_ros_depth_camera_demo.world
 
-const std::string SUB_TOPIC = "demo_cam/mycamera/points_demo";
+const std::string SUB_TOPIC = "camera/ir/image";
 const double MAX_DIST = 4.0;
 const double MAX_DIST2 = MAX_DIST * MAX_DIST;
 const double FLOOR_HEIGHT = 3;
@@ -164,3 +164,5 @@ int main(int argc, char* argv[]) {
     rclcpp::shutdown();
     return 0;
 }
+
+// Ros2 open ni driver
