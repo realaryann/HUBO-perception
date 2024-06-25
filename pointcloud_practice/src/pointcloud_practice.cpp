@@ -6,6 +6,8 @@
 #include "pcl/segmentation/extract_clusters.h"
 #include "pcl/search/kdtree.h"
 
+#include "tf2_ros/transform_broadcaster.h"
+
 #include <cstdlib>
 // Run the following to get point cloud information
 // gazebo /opt/ros/humble/share/gazebo_plugins/worlds/gazebo_ros_depth_camera_demo.world
@@ -19,6 +21,7 @@ class PointCloudParser : public rclcpp::Node {
 private:
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr _subscriber;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> _object_location_broadcaster;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher_centers;
 
     void _on_subscriber(sensor_msgs::msg::PointCloud2 initial_cloud) {
@@ -121,6 +124,17 @@ private:
         _publisher->publish(msg);
 
         // Output final cloud
+        for (size_t point  = 0; point < output_centers->points.size(); point++) {
+            geometry_msgs::msg::TransformStamped t;
+            t.header.stamp = this->get_clock()->now();
+            t.header.frame_id = "camera_link";
+            t.child_frame_id = "object_" + std::to_string(point);
+            t.transform.translation.x = output_centers->points[point].x;
+            t.transform.translation.y = output_centers->points[point].y;
+            t.transform.translation.z = output_centers->points[point].z;
+            // For rotation, some factor of pi/2 - angle helps
+            _object_location_broadcaster->sendTransform(t);
+        }
         output_centers->width = output_centers->size();
         output_centers->height = 1;
         output_centers->is_dense = true;
@@ -133,6 +147,7 @@ public:
     PointCloudParser() : Node("pointcloud_parser") {
         _subscriber = create_subscription<sensor_msgs::msg::PointCloud2>(SUB_TOPIC, 10, std::bind(&PointCloudParser::_on_subscriber, this, std::placeholders::_1));
         _publisher = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_point_cloud", 10);
+        _object_location_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
         _publisher_centers = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_centers", 10);
         declare_parameter<int>("MIN_CLUSTER_SIZE");
         declare_parameter<int>("MAX_CLUSTER_SIZE");

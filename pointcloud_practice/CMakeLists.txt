@@ -9,6 +9,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(rclcpp REQUIRED PATHs /opt/ros/humble)
 find_package(PCL 1.3 REQUIRED) 
 include_directories(${PCL_INCLUDE_DIRS})
@@ -30,7 +32,7 @@ endif()
 
 add_executable(pointcloud_practice src/pointcloud_practice.cpp)
 target_link_libraries(pointcloud_practice ${PCL_LIBRARIES})
-ament_target_dependencies(pointcloud_practice rclcpp std_msgs sensor_msgs pcl_conversions)
+ament_target_dependencies(pointcloud_practice rclcpp std_msgs sensor_msgs pcl_conversions geometry_msgs tf2_ros)
 
 install(
   TARGETS
