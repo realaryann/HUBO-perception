@@ -47,11 +47,24 @@ private:
         seg.setMethodType(pcl::SAC_RANSAC);
         seg.setDistanceThreshold(0.01);
         seg.setInputCloud(object_cluster_cloud);
-
         seg.segment(*inliers, *coefficients);
 
         pcl::ExtractIndices<pcl::PointXYZRGB> extract;
         extract.setInputCloud(object_cluster_cloud);
+        extract.setIndices(inliers);
+        extract.setNegative(true);
+
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr removed_floor(new pcl::PointCloud<pcl::PointXYZRGB>);
+        extract.filter(*removed_floor);
+
+        seg.setModelType(pcl::SACMODEL_PLANE);
+        seg.setMethodType(pcl::SAC_RANSAC);
+        seg.setDistanceThreshold(0.01);
+        seg.setInputCloud(removed_floor);
+        seg.segment(*inliers, *coefficients);
+
+        extract.setInputCloud(removed_floor);
         extract.setIndices(inliers);
         extract.setNegative(true);
 
