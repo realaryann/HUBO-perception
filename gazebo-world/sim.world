@@ -149,10 +149,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>3811 57000000</sim_time>
-      <real_time>444 224048122</real_time>
-      <wall_time>1719335914 37458426</wall_time>
-      <iterations>443601</iterations>
+      <sim_time>3942 984000000</sim_time>
+      <real_time>132 116101164</real_time>
+      <wall_time>1719339206 38447756</wall_time>
+      <iterations>131927</iterations>
       <model name='camera_model'>
         <pose>0 0 2 0 0.650607 3.14159</pose>
         <scale>1 1 1</scale>
@@ -184,20 +184,30 @@
         </link>
       </model>
       <model name='unit_box'>
-        <pose>-1.5233 0.386298 1.10338 -1.4e-05 1.4e-05 1.4e-05</pose>
+        <pose>-1.5233 0.386297 1.10338 -2e-06 -2e-06 0.718564</pose>
         <scale>0.176755 0.176755 0.176755</scale>
         <link name='link'>
-          <pose>-1.5233 0.386298 1.10338 -1.4e-05 1.4e-05 1.4e-05</pose>
+          <pose>-1.5233 0.386297 1.10338 -2e-06 -2e-06 0.718564</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>-0.248994 -0.249001 -4.23778 -0.324185 -0.324263 3.14159</acceleration>
-          <wrench>-0.248994 -0.249001 -4.23778 0 -0 0</wrench>
+          <acceleration>0.729826 -0.048833 1.75394 -2.58884 1.16678 3.14158</acceleration>
+          <wrench>0.729826 -0.048833 1.75394 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='unit_cylinder'>
+        <pose>-1.45002 -0.483875 1.05198 -0.000114 5.2e-05 -3.4e-05</pose>
+        <scale>0.073966 0.073966 0.073966</scale>
+        <link name='link'>
+          <pose>-1.45002 -0.483875 1.05198 -0.000114 5.2e-05 -3.4e-05</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 -9.8 0 -0 0</acceleration>
+          <wrench>0 0 -9.8 0 -0 0</wrench>
         </link>
       </model>
       <model name='unit_sphere'>
-        <pose>29292 -35739.7 111737 2.89141 0.933749 1.6795</pose>
+        <pose>29366.8 -35831.2 111737 2.89244 0.932889 1.58943</pose>
         <scale>0.21446 0.21446 0.21446</scale>
         <link name='link'>
-          <pose>29292 -35739.7 111737 2.89141 0.933749 1.6795</pose>
+          <pose>29366.8 -35831.2 111737 2.89244 0.932889 1.58943</pose>
           <velocity>0.567084 -0.693744 -0 6e-06 5e-06 -0.000689</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -219,7 +229,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>2.73405 -2.09932 2.8224 -0 0.483512 2.5158</pose>
+        <pose>2.15219 -0.077017 2.09669 -0 0.519512 3.05579</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -565,6 +575,61 @@
             <sphere>
               <radius>0.5</radius>
             </sphere>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Grey</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='unit_cylinder'>
+      <pose>-4 -2 0.5 0 -0 0</pose>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.145833</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.145833</iyy>
+            <iyz>0</iyz>
+            <izz>0.125</izz>
+          </inertia>
+          <pose>0 0 0 0 -0 0</pose>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <cylinder>
+              <radius>0.499999</radius>
+              <length>1</length>
+            </cylinder>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.499999</radius>
+              <length>1</length>
+            </cylinder>
           </geometry>
           <material>
             <script>
