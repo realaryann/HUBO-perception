@@ -1,8 +1,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "pcl_conversions/pcl_conversions.h"
-#include "pcl/segmentation/extract_clusters.h"
-#include "pcl/search/kdtree.h"
+#include "pcl/segmentation/sac_segmentation.h"
+#include "pcl/filters/extract_indices.h"
 
 #include <cstdlib>
 // Run the following to get point cloud information
@@ -37,18 +37,35 @@ private:
                 cloud_parsed->push_back(pt);
         }
 
-        // TODO: Do negative of table plane, publish object tfs
-
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr object_cluster_cloud(new pcl::PointCloud<pcl::PointXYZRGB>());
         *object_cluster_cloud = *cloud_parsed;
+        // TODO: Do negative of table plane, publish object tfs
+        pcl::SACSegmentation<pcl::PointXYZRGB> seg;
+        pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
+        pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
+        seg.setModelType(pcl::SACMODEL_PLANE);
+        seg.setMethodType(pcl::SAC_RANSAC);
+        seg.setDistanceThreshold(0.01);
+        seg.setInputCloud(object_cluster_cloud);
 
+        seg.segment(*inliers, *coefficients);
+
+        pcl::ExtractIndices<pcl::PointXYZRGB> extract;
+        extract.setInputCloud(object_cluster_cloud);
+        extract.setIndices(inliers);
+        extract.setNegative(true);
+
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        extract.filter(*output_cloud);
+        
         // RCLCPP_INFO(this->get_logger(), "END --------------------\n");
-        object_cluster_cloud->width = object_cluster_cloud->size();
-        object_cluster_cloud->height = 1;
-        object_cluster_cloud->is_dense = true;
-        object_cluster_cloud->header.frame_id = cloud_conversion->header.frame_id;
+        output_cloud->width = output_cloud->size();
+        output_cloud->height = 1;
+        output_cloud->is_dense = true;
+        output_cloud->header.frame_id = cloud_conversion->header.frame_id;
         sensor_msgs::msg::PointCloud2 msg;
-        pcl::toROSMsg(*object_cluster_cloud, msg);
+        pcl::toROSMsg(*output_cloud, msg);
         _publisher->publish(msg);
     }
 public: 
@@ -58,7 +75,7 @@ public:
         declare_parameter<int>("MIN_CLUSTER_SIZE");
         declare_parameter<int>("MAX_CLUSTER_SIZE");
         declare_parameter<double>("TABLE_HEIGHT");
-        set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 600));
+        set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 100));
         set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 5000));
         set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 2.1));
     }

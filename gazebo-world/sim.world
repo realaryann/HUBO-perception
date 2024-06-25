@@ -149,15 +149,15 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>3029 979000000</sim_time>
-      <real_time>54 577584371</real_time>
-      <wall_time>1719329251 189619099</wall_time>
-      <iterations>54444</iterations>
+      <sim_time>3367 456000000</sim_time>
+      <real_time>337 952035358</real_time>
+      <wall_time>1719333666 942540519</wall_time>
+      <iterations>337477</iterations>
       <model name='camera_model'>
-        <pose>0 0 2 0 0.650607 3.14159265</pose>
+        <pose>0 0 2 0 0.650607 3.14159</pose>
         <scale>1 1 1</scale>
         <link name='camera_link'>
-          <pose>0 0 2 0 0.650607 3.14159265</pose>
+          <pose>0 0 2 0 0.650607 3.14159</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -183,13 +183,23 @@
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
+      <model name='unit_box'>
+        <pose>-1.32559 -0.194895 1.10338 -4e-06 -2e-06 1e-06</pose>
+        <scale>0.176755 0.176755 0.176755</scale>
+        <link name='link'>
+          <pose>-1.32559 -0.194895 1.10338 -4e-06 -2e-06 1e-06</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>-0.359769 0.359768 -1.76328 -0.929205 0.929207 -3.14159</acceleration>
+          <wrench>-0.359769 0.359768 -1.76328 0 -0 0</wrench>
+        </link>
+      </model>
       <model name='unit_sphere'>
-        <pose>14832.9 -18098.2 23963.1 2.9266 -0.167395 2.23211</pose>
+        <pose>29040.4 -35432 111737 2.88895 0.936978 1.98316</pose>
         <scale>0.21446 0.21446 0.21446</scale>
         <link name='link'>
-          <pose>14832.9 -18098.2 23963.1 2.9266 -0.167395 2.23211</pose>
-          <velocity>0.567084 -0.693744 -0 2.9e-05 2.4e-05 -0.000689</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
+          <pose>29040.4 -35432 111737 2.88895 0.936978 1.98316</pose>
+          <velocity>0.567084 -0.693744 -0 6e-06 5e-06 -0.000689</velocity>
+          <acceleration>0 0 0 -0 -0 -0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
@@ -439,6 +449,59 @@
             <sphere>
               <radius>521016</radius>
             </sphere>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Grey</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='unit_box'>
+      <pose>-3.14742 -0.257796 0.5 0 -0 0</pose>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.166667</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.166667</iyy>
+            <iyz>0</iyz>
+            <izz>0.166667</izz>
+          </inertia>
+          <pose>0 0 0 0 -0 0</pose>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
           </geometry>
           <material>
             <script>
