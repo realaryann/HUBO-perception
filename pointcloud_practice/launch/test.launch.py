@@ -9,7 +9,14 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
 
+    namespace_param_name = "namespace"
     namespace = 'camera'
+    namespace_launch_arg = DeclareLaunchArgument(namespace_param_name, default_value='camera')
+
+    tf_prefix_param_name = "tf_prefix"
+    tf_prefix = LaunchConfiguration(tf_prefix_param_name)
+    tf_prefix_launch_arg = DeclareLaunchArgument(tf_prefix_param_name, default_value='')
+
     container = launch_ros.actions.ComposableNodeContainer(
             name='container',
             namespace=namespace,
@@ -24,9 +31,9 @@ def generate_launch_description():
                     namespace=namespace,
                     parameters=[{'depth_registration': False},
                                 {'use_device_time': True},
-                                {'rgb_frame_id': [namespace,"_rgb_optical_frame"]},
-                                {'depth_frame_id': [namespace,"_depth_optical_frame"]},
-                                {'ir_frame_id': [namespace,"_ir_optical_frame"]},],
+                                {'rgb_frame_id': namespace+"_rgb_optical_frame"},
+                                {'depth_frame_id': namespace +"_depth_optical_frame"},
+                                {'ir_frame_id': namespace+"_ir_optical_frame"},],
                     remappings=[('depth/image', 'depth_registered/image_raw')],
                 ),
                 # Create XYZ point cloud
@@ -44,11 +51,12 @@ def generate_launch_description():
             output='screen',
     )
 
+
     return LaunchDescription([
         Node(
-            package='sim_tf_broadcaster',
-            executable='sim_tf_broadcaster',
-            name='sim_tf_broadcaster',
+            package='real_tf_broadcaster',
+            executable='real_tf_broadcaster',
+            name='real_tf_broadcaster',
         ),
         Node(
             package='pointcloud_practice',
@@ -66,5 +74,7 @@ def generate_launch_description():
             name='pointcloud_pipe',
             executable='pipe'
         ),
+        namespace_launch_arg,
+        tf_prefix_launch_arg,
         container,
     ])

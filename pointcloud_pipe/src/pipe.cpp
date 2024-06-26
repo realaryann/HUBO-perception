@@ -7,6 +7,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher;
 
     void _on_subscriber(sensor_msgs::msg::PointCloud2 cloud) {
+        cloud.header.frame_id = "camera_link";
         _publisher->publish(cloud);
     }
 public:
