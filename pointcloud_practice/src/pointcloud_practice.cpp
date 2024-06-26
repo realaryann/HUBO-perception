@@ -125,7 +125,7 @@ public:
                 // pt.r = 255 - center_point.r;
                 // pt.g = 255 - center_point.g;
                 // pt.b = 255 - center_point.b;
-                // output_cloud->push_back(pt);
+                output_cloud->push_back(pt);
             }
             center_point.x /= cluster.indices.size();
             center_point.y /= cluster.indices.size();
@@ -133,13 +133,13 @@ public:
             output_centers->push_back(center_point);
         }
         // Output final cloud
-        // output_cloud->width = output_cloud->size();
-        // output_cloud->height = 1;
-        // output_cloud->is_dense = true;
-        // output_cloud->header.frame_id = cloud_conversion->header.frame_id;
-        // sensor_msgs::msg::PointCloud2 msg;
-        // pcl::toROSMsg(*output_cloud, msg);
-        // _publisher->publish(msg);
+        output_cloud->width = output_cloud->size();
+        output_cloud->height = 1;
+        output_cloud->is_dense = true;
+        output_cloud->header.frame_id = cloud_conversion->header.frame_id;
+        sensor_msgs::msg::PointCloud2 msg;
+        pcl::toROSMsg(*output_cloud, msg);
+        _publisher->publish(msg);
 
         // Output final cloud
         for (size_t point  = 0; point < output_centers->points.size(); point++) {
@@ -175,8 +175,8 @@ public:
         declare_parameter<double>("TABLE_HEIGHT");
         declare_parameter<double>("TOLERANCE");
         declare_parameter<bool>("REMOVE_FLOOR");
-        set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 1));
-        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 10000));
+        set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 50));
+        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 500));
         set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 2.1));
         set_parameter(rclcpp::Parameter("TOLERANCE", 0.01));
         set_parameter(rclcpp::Parameter("REMOVE_FLOOR", false));
@@ -191,3 +191,7 @@ int main(int argc, char* argv[]) {
 }
 
 // Ros2 open ni driver
+
+// yolo 5 object classification
+// parsing image coordinates to object tfs
+// 

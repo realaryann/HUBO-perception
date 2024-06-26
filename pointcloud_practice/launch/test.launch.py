@@ -64,10 +64,10 @@ def generate_launch_description():
             name='pointcloud_practice',
             output='screen',
             parameters=[
-                {'MIN_CLUSTER_SIZE' : 1},
-                {'MAX_CLUSTER_SIZE' : 5000},
+                {'MIN_CLUSTER_SIZE' : 50},
+                {'MAX_CLUSTER_SIZE' : 500},
                 {'TABLE_HEIGHT' : 10.0},
-                {'TOLERANCE' : 0.03},
+                {'TOLERANCE' : 0.01},
                 {'REMOVE_FLOOR' : False},
             ],
         ),
