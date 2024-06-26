@@ -22,4 +22,13 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+add_executable(pipe src/pipe.cpp)
+ament_target_dependencies(pipe rclcpp sensor_msgs)
+
+install(
+  TARGETS
+  pipe
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
