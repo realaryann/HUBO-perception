@@ -65,8 +65,10 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 {'MIN_CLUSTER_SIZE' : 1},
-                {'MAX_CLUSTER_SIZE' : 10000},
-                {'TABLE_HEIGHT' : 2.1},
+                {'MAX_CLUSTER_SIZE' : 5000},
+                {'TABLE_HEIGHT' : 10.0},
+                {'TOLERANCE' : 0.03},
+                {'REMOVE_FLOOR' : False},
             ],
         ),
         Node(
