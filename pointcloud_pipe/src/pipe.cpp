@@ -11,7 +11,7 @@ private:
     }
 public:
     Pipe() : Node("pipe") {
-        _subscriber = create_subscription<sensor_msgs::msg::PointCloud2>("camera/ir/image", 10, std::bind(&Pipe::_on_subscriber, this, std::placeholders::_1));
+        _subscriber = create_subscription<sensor_msgs::msg::PointCloud2>("camera/depth/points", rclcpp::SensorDataQoS(), std::bind(&Pipe::_on_subscriber, this, std::placeholders::_1));
         _publisher = create_publisher<sensor_msgs::msg::PointCloud2>("piped_pointcloud", 10);
     }
 };
