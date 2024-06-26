@@ -5,6 +5,7 @@
 #include "pcl/filters/extract_indices.h"
 #include "pcl/segmentation/extract_clusters.h"
 #include "pcl/search/kdtree.h"
+#include "pcl/filters/voxel_grid.h"
 
 #include <chrono>
 
@@ -29,7 +30,7 @@ private:
     sensor_msgs::msg::PointCloud2 _last_cloud;
 
     void _on_subscriber(sensor_msgs::msg::PointCloud2 initial_cloud) {
-        _last_cloud = initial_cloud;
+        parse(initial_cloud);
     }
 
     void _on_timer() {
@@ -37,7 +38,8 @@ private:
     }
 public:
     void parse(sensor_msgs::msg::PointCloud2 initial_cloud) {
-        RCLCPP_INFO(this->get_logger(), "STARTING");
+        // RCLCPP_INFO(this->get_logger(), "STARTING");
+        double TOLERANCE = get_parameter("TOLERANCE").as_double();
         std::vector<sensor_msgs::msg::PointCloud2> clusters;
         // convert to pcl cloud
         pcl::PCLPointCloud2::Ptr cloud(new pcl::PCLPointCloud2());
@@ -46,7 +48,7 @@ public:
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_conversion(new pcl::PointCloud<pcl::PointXYZ>());
         pcl::fromPCLPointCloud2(*cloud, *cloud_conversion);
-        
+
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_parsed(new pcl::PointCloud<pcl::PointXYZ>());
         double table_height = get_parameter("TABLE_HEIGHT").as_double();
         for (auto pt : cloud_conversion->points) {
@@ -64,7 +66,7 @@ public:
         pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
         seg.setModelType(pcl::SACMODEL_PLANE);
         seg.setMethodType(pcl::SAC_RANSAC);
-        seg.setDistanceThreshold(0.01);
+        seg.setDistanceThreshold(TOLERANCE);
         seg.setInputCloud(object_cluster_cloud);
         seg.segment(*inliers, *coefficients);
 
@@ -100,7 +102,7 @@ public:
         pcl::EuclideanClusterExtraction<pcl::PointXYZ> clusterer;
         pcl::search::KdTree<pcl::PointXYZ>::Ptr search_method(new pcl::search::KdTree<pcl::PointXYZ>);
         std::vector<pcl::PointIndices> cluster_vector;
-        clusterer.setClusterTolerance(0.1);
+        clusterer.setClusterTolerance(TOLERANCE);
         clusterer.setInputCloud(removed_table);
         clusterer.setMinClusterSize(get_parameter("MIN_CLUSTER_SIZE").as_int());
         clusterer.setMaxClusterSize(get_parameter("MAX_CLUSTER_SIZE").as_int());
@@ -158,7 +160,7 @@ public:
         sensor_msgs::msg::PointCloud2 msg_centers;
         pcl::toROSMsg(*output_centers, msg_centers);
         _publisher_centers->publish(msg_centers);
-        RCLCPP_INFO(get_logger(), "ENDING");
+        // RCLCPP_INFO(get_logger(), "ENDING");
     }
 
     PointCloudParser() : Node("pointcloud_parser") {

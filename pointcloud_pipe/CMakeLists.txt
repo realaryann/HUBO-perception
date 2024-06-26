@@ -9,6 +9,11 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(PCL 1.3 REQUIRED) 
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+find_package(pcl_conversions REQUIRED) 
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -23,7 +28,8 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(pipe src/pipe.cpp)
-ament_target_dependencies(pipe rclcpp sensor_msgs)
+target_link_libraries(pipe ${PCL_LIBRARIES})
+ament_target_dependencies(pipe rclcpp sensor_msgs pcl_conversions)
 
 install(
   TARGETS
