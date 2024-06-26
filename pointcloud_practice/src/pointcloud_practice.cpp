@@ -26,16 +26,12 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher;
     std::shared_ptr<tf2_ros::TransformBroadcaster> _object_location_broadcaster;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher_centers;
-    rclcpp::TimerBase::SharedPtr _timer;
     sensor_msgs::msg::PointCloud2 _last_cloud;
 
     void _on_subscriber(sensor_msgs::msg::PointCloud2 initial_cloud) {
         parse(initial_cloud);
     }
 
-    void _on_timer() {
-        parse(_last_cloud);
-    }
 public:
     void parse(sensor_msgs::msg::PointCloud2 initial_cloud) {
         // RCLCPP_INFO(this->get_logger(), "STARTING");
@@ -169,7 +165,6 @@ public:
         _publisher = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_point_cloud", 10);
         _object_location_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
         _publisher_centers = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_centers", 10);
-        _timer = create_wall_timer(1s, std::bind(&PointCloudParser::_on_timer, this));
         declare_parameter<int>("MIN_CLUSTER_SIZE");
         declare_parameter<int>("MAX_CLUSTER_SIZE");
         declare_parameter<double>("TABLE_HEIGHT");
