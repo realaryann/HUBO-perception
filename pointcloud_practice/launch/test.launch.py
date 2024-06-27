@@ -76,6 +76,11 @@ def generate_launch_description():
             name='pointcloud_pipe',
             executable='pipe'
         ),
+        Node(
+            package='image_parsing',
+            name='image_parsing',
+            executable='classifier',
+        ),
         namespace_launch_arg,
         tf_prefix_launch_arg,
         container,
