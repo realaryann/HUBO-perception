@@ -40,6 +40,8 @@ class ObjectClassifier(Node):
                 # print(detected + " at " + str(round(location[2].item() - location[0].item())) + ', ' + str(round(location[3].item() - location[1].item())))
         msg = String()
         msg.data = str(self.locactions_dict)
+        temp = msg.data
+        
         self.publisher.publish(msg)
                 
 

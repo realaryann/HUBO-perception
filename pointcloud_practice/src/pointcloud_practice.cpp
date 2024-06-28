@@ -5,6 +5,7 @@
 #include "pcl/filters/extract_indices.h"
 #include "pcl/segmentation/extract_clusters.h"
 #include "pcl/search/kdtree.h"
+#include "std_msgs/msg/string.hpp"
 #include "pcl/filters/voxel_grid.h"
 
 #include <chrono>
@@ -12,6 +13,7 @@
 #include "tf2_ros/transform_broadcaster.h"
 
 #include <cstdlib>
+#include <map>
 // Run the following to get point cloud information
 // gazebo /opt/ros/humble/share/gazebo_plugins/worlds/gazebo_ros_depth_camera_demo.world
 
@@ -22,18 +24,27 @@ const double FLOOR_HEIGHT = 3;
 
 class PointCloudParser : public rclcpp::Node {
 private:
-    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr _subscriber;
+    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr _subscriber_cloud;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _subscriber_parsing;
+
+    rclcpp::CallbackGroup::SharedPtr _group_cloud;
+    rclcpp::CallbackGroup::SharedPtr _group_parsing;
+
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher;
     std::shared_ptr<tf2_ros::TransformBroadcaster> _object_location_broadcaster;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher_centers;
     sensor_msgs::msg::PointCloud2 _last_cloud;
 
+
     void _on_subscriber(sensor_msgs::msg::PointCloud2 initial_cloud) {
-        parse(initial_cloud);
+        parse_cloud(initial_cloud);
+    }
+    void _on_info(std_msgs::msg::String msg) {
+        RCLCPP_INFO(get_logger(), "%s", msg.data.c_str());
+        return;
     }
 
-public:
-    void parse(sensor_msgs::msg::PointCloud2 initial_cloud) {
+    void parse_cloud(sensor_msgs::msg::PointCloud2 initial_cloud) {
         // RCLCPP_INFO(this->get_logger(), "STARTING");
         double TOLERANCE = get_parameter("TOLERANCE").as_double();
         std::vector<sensor_msgs::msg::PointCloud2> clusters;
@@ -158,10 +169,20 @@ public:
         _publisher_centers->publish(msg_centers);
         // RCLCPP_INFO(get_logger(), "ENDING");
     }
-
+public:
     PointCloudParser() : Node("pointcloud_parser") {
-        using std::chrono_literals::operator""s;
-        _subscriber = create_subscription<sensor_msgs::msg::PointCloud2>(SUB_TOPIC, 10, std::bind(&PointCloudParser::_on_subscriber, this, std::placeholders::_1));
+        using namespace std::chrono_literals;
+        _group_cloud = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+        rclcpp::SubscriptionOptions options_cloud;
+        options_cloud.callback_group = _group_cloud;
+
+        _group_parsing = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+        rclcpp::SubscriptionOptions options_parsing;
+        options_parsing.callback_group = _group_parsing;
+
+        _subscriber_cloud = create_subscription<sensor_msgs::msg::PointCloud2>(SUB_TOPIC, 10, std::bind(&PointCloudParser::_on_subscriber, this, std::placeholders::_1), options_cloud);
+        _subscriber_parsing = create_subscription<std_msgs::msg::String>("space_to_type", 10, std::bind(&PointCloudParser::_on_info, this, std::placeholders::_1), options_parsing);
+
         _publisher = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_point_cloud", 10);
         _object_location_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
         _publisher_centers = create_publisher<sensor_msgs::msg::PointCloud2>("filtered_centers", 10);
@@ -180,7 +201,10 @@ public:
 
 int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<PointCloudParser>());
+    rclcpp::executors::MultiThreadedExecutor ex;
+    auto parser = std::make_shared<PointCloudParser>();
+    ex.add_node(parser);
+    ex.spin();
     rclcpp::shutdown();
     return 0;
 }
