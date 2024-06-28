@@ -53,7 +53,7 @@ private:
     // Takes in the piped points and stores them with their names in a map
     void _on_info(std_msgs::msg::String msg) {
         std::string data = msg.data;
-        RCLCPP_INFO(get_logger(), "%s", data.c_str()); 
+        // RCLCPP_INFO(get_logger(), "%s", data.c_str()); 
         size_t num_objects = std::count(data.begin(), data.end(), '[');
         for (size_t i = 0; i < num_objects; i++) {
             std::string object = data.substr(0, data.find(']'));
@@ -72,8 +72,8 @@ private:
             _point_names[type] = pt;
             data = data.substr(data.find(']')+1);
         }
-        for (auto pair : _point_names)
-            RCLCPP_INFO(get_logger(), "{%lf, %lf, %lf,\t%s}", pair.second.x, pair.second.y, pair.second.z, pair.first.c_str());
+        // for (auto pair : _point_names)
+        //     RCLCPP_INFO(get_logger(), "{%lf, %lf, %lf,\t%s}", pair.second.x, pair.second.y, pair.second.z, pair.first.c_str());
     }
 
     void parse_cloud(sensor_msgs::msg::PointCloud2 initial_cloud) {
@@ -185,7 +185,8 @@ private:
             geometry_msgs::msg::TransformStamped t;
             t.header.stamp = this->get_clock()->now();
             t.header.frame_id = "camera_link";
-            t.child_frame_id = get_closest_name(output_centers->points[point]);
+            std::string name = get_closest_name(output_centers->points[point], point);
+           t.child_frame_id = name;
             t.transform.translation.x = output_centers->points[point].x;
             t.transform.translation.y = output_centers->points[point].y;
             t.transform.translation.z = output_centers->points[point].z;
@@ -229,9 +230,26 @@ public:
         set_parameter(rclcpp::Parameter("TOLERANCE", 0.01));
         set_parameter(rclcpp::Parameter("REMOVE_FLOOR", false));
     }
-    std::string get_closest_name(pcl::PointXYZ pt) {
+    
+    std::string get_closest_name(pcl::PointXYZ pt, size_t num) {
         double distance2 = static_cast<double>(INT_MAX); //
-        distance2 = pow(pt.x, 2) + pow(pt.y, 2) + pow(pt.z, 2);
+        double TOLERANCE = get_parameter("TOLERANCE").as_double();
+        std::string closest_name;
+        for (auto pair : _point_names) {
+            double temp2 = pow(pt.x - pair.second.x, 2) + pow(pt.y - pair.second.y, 2) + pow(pt.z-pair.second.z, 2);
+            if (temp2 < distance2) {
+                distance2 = temp2;
+                closest_name = pair.first;
+            }
+        }
+        if (closest_name == "" || distance2 >= TOLERANCE)
+            closest_name = "object_" + std::to_string(num);
+        else {
+            _point_names.erase(closest_name);
+            closest_name += "_" + std::to_string(num);
+            RCLCPP_INFO(get_logger(), "%s", closest_name.c_str());
+        }
+        return closest_name;
     }
 };
 
@@ -245,8 +263,6 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-// Ros2 open ni driver
-
-// yolo 5 object classification
-// parsing image coordinates to object tfs
-// 
+// Ros2 open ni driver [X]
+// yolo 5 object classification [X]
+// parsing image coordinates to object tfs [ ]

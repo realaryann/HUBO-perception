@@ -11,7 +11,7 @@ from std_msgs.msg import String
 from cv_bridge import CvBridge
 bridge = CvBridge()
 
-model = YOLO('yolov8n.pt')
+model = YOLO('yolov5s.pt')
 
 class ObjectClassifier(Node):
     def __init__(self):
@@ -32,6 +32,7 @@ class ObjectClassifier(Node):
         if self.image:
             img = bridge.imgmsg_to_cv2(self.image, desired_encoding='passthrough')
             self.results = model(img, verbose=False)
+            # self.results.show()
             for val in range(len(self.results[0].boxes.cls)):
                 bounding = self.results[0].boxes.xyxy[val]
                 location = (round(bounding[2].item() - bounding[0].item()), round(bounding[3].item() - bounding[1].item()))
