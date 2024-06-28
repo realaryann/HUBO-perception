@@ -185,7 +185,7 @@ private:
             geometry_msgs::msg::TransformStamped t;
             t.header.stamp = this->get_clock()->now();
             t.header.frame_id = "camera_link";
-            t.child_frame_id = "object_" + std::to_string(point);
+            t.child_frame_id = get_closest_name(output_centers->points[point]);
             t.transform.translation.x = output_centers->points[point].x;
             t.transform.translation.y = output_centers->points[point].y;
             t.transform.translation.z = output_centers->points[point].z;
@@ -228,6 +228,10 @@ public:
         set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 2.1));
         set_parameter(rclcpp::Parameter("TOLERANCE", 0.01));
         set_parameter(rclcpp::Parameter("REMOVE_FLOOR", false));
+    }
+    std::string get_closest_name(pcl::PointXYZ pt) {
+        double distance2 = static_cast<double>(INT_MAX); //
+        distance2 = pow(pt.x, 2) + pow(pt.y, 2) + pow(pt.z, 2);
     }
 };
 
