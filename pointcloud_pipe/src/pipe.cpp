@@ -63,7 +63,8 @@ private:
             coords.second = std::stoi(object.substr(object.find(',')+1, object.find(')')));
             // RCLCPP_INFO(get_logger(), "FOUND COORDS: [%d, %d]", coords.first, coords.second);
             // get string in between '' 
-            object = object.substr(object.find('\'') + 1, object.find('\''));
+            object = object.substr(object.find('\'') + 1);
+            object = object.substr(0, object.find('\''));
             type_locations[coords] = object;
         }
         // RCLCPP_INFO(get_logger(), "%ld, %s", num_objects, data.c_str());

@@ -22,6 +22,14 @@ const double MAX_DIST = 10.0;
 const double MAX_DIST2 = MAX_DIST * MAX_DIST;
 const double FLOOR_HEIGHT = 3;
 
+class Vector3 {
+    public:
+        double x;
+        double y;
+        double z;
+        Vector3(double x=0.0, double y=0.0, double z=0.0) : x(x), y(y), z(z) {} 
+};
+
 class PointCloudParser : public rclcpp::Node {
 private:
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr _subscriber_cloud;
@@ -35,13 +43,37 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher_centers;
     sensor_msgs::msg::PointCloud2 _last_cloud;
 
+    std::map<std::string, pcl::PointXYZ> _point_names;
+
 
     void _on_subscriber(sensor_msgs::msg::PointCloud2 initial_cloud) {
         parse_cloud(initial_cloud);
     }
+
+    // Takes in the piped points and stores them with their names in a map
     void _on_info(std_msgs::msg::String msg) {
-        RCLCPP_INFO(get_logger(), "%s", msg.data.c_str());
-        return;
+        std::string data = msg.data;
+        RCLCPP_INFO(get_logger(), "%s", data.c_str()); 
+        size_t num_objects = std::count(data.begin(), data.end(), '[');
+        for (size_t i = 0; i < num_objects; i++) {
+            std::string object = data.substr(0, data.find(']'));
+            std::string type = object.substr(object.find('[')+1,object.find(':')-1);
+            pcl::PointXYZ pt;
+            object = object.substr(object.find('(')+1);
+            if (object.substr(0, object.find(' ')) != "nan")
+                pt.x = std::stof(object.substr(0, object.find(' ')));
+            object = object.substr(object.find(' ')+1);
+            if (object.substr(0, object.find(' ')) != "nan")
+                pt.y = std::stof(object.substr(0, object.find(' ')));
+            object = object.substr(object.find(' ')+1);
+            if (object.substr(0, object.find(')')) != "nan")
+                pt.z = std::stof(object.substr(0, object.find(')'))); 
+            // bc of these if statements the top left object will be named whatever is nan
+            _point_names[type] = pt;
+            data = data.substr(data.find(']')+1);
+        }
+        for (auto pair : _point_names)
+            RCLCPP_INFO(get_logger(), "{%lf, %lf, %lf,\t%s}", pair.second.x, pair.second.y, pair.second.z, pair.first.c_str());
     }
 
     void parse_cloud(sensor_msgs::msg::PointCloud2 initial_cloud) {
