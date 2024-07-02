@@ -1,0 +1,14 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/max_cohn/pointcloud_ws/install/openni2_camera/local/lib/python3.10/dist-packages",
+        "/home/max_cohn/pointcloud_ws/install/image_parsing/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/max_cohn/pointcloud_ws/install/openni2_camera/local/lib/python3.10/dist-packages",
+        "/home/max_cohn/pointcloud_ws/install/image_parsing/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

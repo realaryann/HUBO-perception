@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/max_cohn/pointcloud_ws/install/openni2_camera/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/max_cohn/pointcloud_ws/src/openni2_camera/openni2_camera/include/**",
+        "/home/max_cohn/pointcloud_ws/src/pointcloud_pipe/include/**",
+        "/home/max_cohn/pointcloud_ws/src/pointcloud_practice/include/**",
+        "/home/max_cohn/pointcloud_ws/src/real_tf_broadcaster/include/**",
+        "/home/max_cohn/pointcloud_ws/src/sim_tf_broadcaster/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

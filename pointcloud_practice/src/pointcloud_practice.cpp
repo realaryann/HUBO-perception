@@ -253,7 +253,7 @@ public:
             }
         }
         if (closest_name == "" || distance2 >= TOLERANCE)
-            closest_name = "object_" + std::to_string(num);
+            closest_name = "_" + std::to_string(num);
         else {
             _point_names.erase(closest_name);
             closest_name += "_" + std::to_string(num);
@@ -275,4 +275,4 @@ int main(int argc, char* argv[]) {
 
 // Ros2 open ni driver [X]
 // yolo 5 object classification [X]
-// parsing image coordinates to object tfs [ ]
+// parsing image coordinates to object tfs [X]
