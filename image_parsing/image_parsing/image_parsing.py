@@ -11,7 +11,7 @@ from std_msgs.msg import String
 from cv_bridge import CvBridge
 bridge = CvBridge()
 
-model = YOLO('yolov5s.pt')
+model = YOLO('/home/max_cohn/pointcloud_ws/src/image_parsing/image_parsing/yolo-custom-cube.pt')
 
 class ObjectClassifier(Node):
     def __init__(self):
@@ -32,12 +32,14 @@ class ObjectClassifier(Node):
         if self.image:
             img = bridge.imgmsg_to_cv2(self.image, desired_encoding='passthrough')
             self.results = model(img, verbose=False)
-            # self.results.show()
+            # self.results[0].show()
             for val in range(len(self.results[0].boxes.cls)):
                 bounding = self.results[0].boxes.xyxy[val]
-                location = (round(bounding[2].item() - bounding[0].item()), round(bounding[3].item() - bounding[1].item()))
+                # self.get_logger().info(str(bounding))
+                location = (round((bounding[2].item() + bounding[0].item())/2), round((bounding[3].item() + bounding[1].item())/2))
                 detected = self.results[0].names[self.results[0].boxes.cls[val].item()]
                 self.locactions_dict[location] = detected
+                # self.get_logger().info(str(location) + " " + str(self.image.width) + ", " + str(self.image.height))
                 # print(detected + " at " + str(round(location[2].item() - location[0].item())) + ', ' + str(round(location[3].item() - location[1].item())))
         msg = String()
         msg.data = str(self.locactions_dict)

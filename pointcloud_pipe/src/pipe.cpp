@@ -75,9 +75,10 @@ private:
             pcl_conversions::toPCL(_cloud, *cloud);
             pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_conversion(new pcl::PointCloud<pcl::PointXYZ>());
             pcl::fromPCLPointCloud2(*cloud, *cloud_conversion);
-            // RCLCPP_INFO(get_logger(), ">%d, %d<  %ld", p.first.first, p.first.second, cloud_conversion->points.size());
+            // RCLCPP_INFO(get_logger(), "DIMENSIONS: %ld, %ld", cloud_conversion->width, cloud_conversion->height);
             pcl::PointXYZ pt = cloud_conversion->points[p.first.first + p.first.second * cloud_conversion->width];
-            locations.data += "[" + p.second + ": (" + std::to_string(pt.x) + " " + std::to_string(pt.y) +  + " " + std::to_string(pt.z) + ")]\n";
+            // RCLCPP_INFO(get_logger(), "%lf, %lf, %lf", pt.x, pt.y, pt.z);
+            locations.data += "[" + p.second + ": (" + std::to_string(pt.x) + " " + std::to_string(pt.y)  + " " + std::to_string(pt.z) + ")]\n";
         }
         _publisher_info->publish(locations);
         return objects_types;

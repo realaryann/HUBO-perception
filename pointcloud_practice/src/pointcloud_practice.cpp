@@ -72,8 +72,18 @@ private:
             _point_names[type] = pt;
             data = data.substr(data.find(']')+1);
         }
-        // for (auto pair : _point_names)
-        //     RCLCPP_INFO(get_logger(), "{%lf, %lf, %lf,\t%s}", pair.second.x, pair.second.y, pair.second.z, pair.first.c_str());
+        // for (auto pair : _point_names) {
+        //     // RCLCPP_INFO(get_logger(), "{%lf, %lf, %lf,\t%s}", pair.second.x, pair.second.y, pair.second.z, pair.first.c_str());
+        //     geometry_msgs::msg::TransformStamped t;
+        //     t.header.stamp = this->get_clock()->now();
+        //     t.header.frame_id = "camera_link";
+        //    t.child_frame_id = "test_" + std::to_string(pair.second.x);
+        //     t.transform.translation.x = pair.second.x;
+        //     t.transform.translation.y = pair.second.y;
+        //     t.transform.translation.z = pair.second.z;
+        //     // For rotation, some factor of pi/2 - angle helps
+        //     _object_location_broadcaster->sendTransform(t);
+        // }
     }
 
     void parse_cloud(sensor_msgs::msg::PointCloud2 initial_cloud) {
@@ -247,7 +257,7 @@ public:
         else {
             _point_names.erase(closest_name);
             closest_name += "_" + std::to_string(num);
-            RCLCPP_INFO(get_logger(), "%s", closest_name.c_str());
+            // RCLCPP_INFO(get_logger(), "%s", closest_name.c_str());
         }
         return closest_name;
     }
