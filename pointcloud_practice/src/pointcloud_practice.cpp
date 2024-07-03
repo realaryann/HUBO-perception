@@ -235,10 +235,10 @@ public:
         declare_parameter<double>("TOLERANCE");
         declare_parameter<bool>("REMOVE_FLOOR");
         set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 50));
-        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 500));
+        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 5000));
         set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 2.1));
         set_parameter(rclcpp::Parameter("TOLERANCE", 0.01));
-        set_parameter(rclcpp::Parameter("REMOVE_FLOOR", false));
+        set_parameter(rclcpp::Parameter("REMOVE_FLOOR", true));
     }
     
     std::string get_closest_name(pcl::PointXYZ pt, size_t num) {
