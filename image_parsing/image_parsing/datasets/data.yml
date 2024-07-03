@@ -3,4 +3,4 @@ val: ./val
 
 nc: 3
 
-names: ["Cube", "ball", "screwdriver"]
+names: ["cube", "ball", "screwdriver"]
