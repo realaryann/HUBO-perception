@@ -1,5 +1,5 @@
 from ultralytics import YOLO
 
-model = YOLO('yolov8s.pt')
+model = YOLO('yolov8m.pt')
 
-model.train(data='./data.yml', batch=8, imgsz=640, epochs=300, workers=1)
+model.train(data='./data.yml', batch=8, imgsz=640, epochs=2000, workers=1, device=0)

@@ -1,6 +1,6 @@
 train: ./train
 val: ./val
 
-nc: 2
+nc: 3
 
-names: ["Cube", "ball"]
+names: ["Cube", "ball", screwdriver]
