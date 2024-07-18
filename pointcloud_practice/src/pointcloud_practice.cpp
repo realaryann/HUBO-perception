@@ -42,7 +42,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher_centers;
     sensor_msgs::msg::PointCloud2 _last_cloud;
 
-    std::map<std::string, pcl::PointXYZ> _point_names;
+    std::map<std::string, std::pair<pcl::PointXYZ, rclcpp::Time>> _point_names;
 
 
     void _on_subscriber(sensor_msgs::msg::PointCloud2 initial_cloud) {
@@ -53,9 +53,10 @@ private:
     void _on_info(std_msgs::msg::String msg) {
         std::string data = msg.data;
         size_t num_objects = std::count(data.begin(), data.end(), '[');
+        std::vector<std::string> used_names;
         for (size_t i = 0; i < num_objects; i++) {
             std::string object = data.substr(0, data.find(']'));
-            std::string type = object.substr(object.find('[')+1,object.find(':')-1);
+            std::string type = object.substr(object.find('[')+1,object.find(':')-2);
             pcl::PointXYZ pt;
             object = object.substr(object.find('(')+1);
             if (object.substr(0, object.find(' ')) != "nan")
@@ -67,9 +68,10 @@ private:
             if (object.substr(0, object.find(')')) != "nan")
                 pt.z = std::stof(object.substr(0, object.find(')'))); 
             // bc of these if statements the top left object will be named whatever is nan
-            replace_closest(_point_names, pt, type);
+            used_names.push_back(replace_closest(_point_names, pt, type));
             data = data.substr(data.find(']')+1);
         }
+        remove_all_except(_point_names, used_names);
     }
 
     // Publish Tfs, Cluster Clouds, publish center points
@@ -161,18 +163,19 @@ private:
         pcl::toROSMsg(*output_cloud, msg);
         _publisher->publish(msg);
         // Broadcast centers as tfs
-        for (size_t point  = 0; point < output_centers->points.size(); point++) {
-            geometry_msgs::msg::TransformStamped t;
-            t.header.stamp = this->get_clock()->now();
-            t.header.frame_id = "camera_link";
-            std::string name = get_closest_name(output_centers->points[point], point);
-           t.child_frame_id = name;
-            t.transform.translation.x = output_centers->points[point].x;
-            t.transform.translation.y = output_centers->points[point].y;
-            t.transform.translation.z = output_centers->points[point].z;
-            // For rotation, some factor of pi/2 - angle helps
-            _object_location_broadcaster->sendTransform(t);
-        }
+        name_closest_points(output_centers);
+        // for (size_t point  = 0; point < output_centers->points.size(); point++) {
+        //     geometry_msgs::msg::TransformStamped t;
+        //     t.header.stamp = this->get_clock()->now();
+        //     t.header.frame_id = "camera_link";
+        //     std::string name = get_closest_name(output_centers->points[point], point);
+        //    t.child_frame_id = name;
+        //     t.transform.translation.x = output_centers->points[point].x;
+        //     t.transform.translation.y = output_centers->points[point].y;
+        //     t.transform.translation.z = output_centers->points[point].z;
+        //     // For rotation, some factor of pi/2 - angle helps
+        //     _object_location_broadcaster->sendTransform(t);
+        // }
         // output a cloud of just those centers as well (NOT NECESSARY)
         output_centers->width = output_centers->size();
         output_centers->height = 1;
@@ -183,14 +186,15 @@ private:
         _publisher_centers->publish(msg_centers);
     }
 
-    void replace_closest(std::map<std::string, pcl::PointXYZ> &point_map, pcl::PointXYZ pt, std::string type) {
+    std::string replace_closest(std::map<std::string, std::pair<pcl::PointXYZ, rclcpp::Time>> &point_map, pcl::PointXYZ pt, std::string type) {
+        std::string modified_name;
         // find closest point
         double TOLERANCE = get_parameter("TOLERANCE").as_double();
         double distance2 = static_cast<double>(INT_MAX);
-        std::pair<std::string, pcl::PointXYZ> closest_pt;
+        std::pair<std::string, std::pair<pcl::PointXYZ, rclcpp::Time>> closest_pt;
         size_t type_count = 0;
         for (auto pair : point_map) {
-            double temp_dist2 = dist2(pair.second, pt);
+            double temp_dist2 = dist2(pair.second.first, pt);
             if (temp_dist2 < distance2) {
                 distance2 = temp_dist2;
                 closest_pt = pair;
@@ -201,21 +205,36 @@ private:
         }
         // Keep names consistent, or make new ones if the object is new
         if (distance2 >= TOLERANCE) {
-            point_map[type + "_" + std::to_string(type_count)] = pt;
+            modified_name = (type + "_" + std::to_string(type_count));
+            point_map[modified_name] = std::pair<pcl::PointXYZ, rclcpp::Time>(pt, this->get_clock()->now());
         }
         else if (closest_pt.first.substr(0, closest_pt.first.find("_")) == type) {
             point_map.erase(closest_pt.first);
-            point_map[closest_pt.first] = pt;
+            point_map[closest_pt.first] = std::pair<pcl::PointXYZ, rclcpp::Time>(pt, this->get_clock()->now());
+            modified_name = closest_pt.first;
         }
         else {
-            point_map[type + "_" + std::to_string(type_count)] = pt;
+            modified_name = type + "_" + std::to_string(type_count);
+            point_map[modified_name] = std::pair<pcl::PointXYZ, rclcpp::Time>(pt, this->get_clock()->now());
         }
+        return modified_name;
     }
 
     double dist2(pcl::PointXYZ a, pcl::PointXYZ b) {
         return pow(b.x - a.x, 2) + pow(b.y - a.y, 2) + pow(b.z - a.z, 2);
     }
     
+    // used to cull old and unused points
+    void remove_all_except(std::map<std::string, std::pair<pcl::PointXYZ, rclcpp::Time>>& map, std::vector<std::string> not_to_be_removed) {
+        std::vector<std::string> to_remove;
+        rclcpp::Time current_time = this->get_clock()->now();
+        for (auto pair : map) {
+            if (std::find(not_to_be_removed.begin(), not_to_be_removed.end(), pair.first) == not_to_be_removed.end() && (current_time.nanoseconds() - pair.second.second.nanoseconds() > 3e9f))
+                to_remove.push_back(pair.first);
+        }
+        for (std::string str : to_remove)
+            map.erase(str);
+    }
 public:
     PointCloudParser() : Node("pointcloud_parser") {
         using namespace std::chrono_literals;
@@ -239,19 +258,20 @@ public:
         declare_parameter<double>("TOLERANCE");
         declare_parameter<bool>("REMOVE_FLOOR");
         set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 50));
-        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 5000));
+        set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 1000));
         set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 2.1));
         set_parameter(rclcpp::Parameter("TOLERANCE", 0.01));
         set_parameter(rclcpp::Parameter("REMOVE_FLOOR", true));
     }
     
     // Gets the closest stored name for a cluster
+    // Could reverse order so it gets closest object to name rather than closest name to the object
     std::string get_closest_name(pcl::PointXYZ pt, size_t num) {
         double distance2 = static_cast<double>(INT_MAX); //
         double TOLERANCE = get_parameter("TOLERANCE").as_double();
         std::string closest_name;
         for (auto pair : _point_names) {
-            double temp2 = dist2(pair.second, pt); // pow(pt.x - pair.first.x, 2) + pow(pt.y - pair.first.y, 2) + pow(pt.z-pair.first.z, 2);
+            double temp2 = dist2(pair.second.first, pt); // pow(pt.x - pair.first.x, 2) + pow(pt.y - pair.first.y, 2) + pow(pt.z-pair.first.z, 2);
             if (temp2 < distance2) {
                 distance2 = temp2;
                 closest_name = pair.first;
@@ -260,6 +280,39 @@ public:
         if (closest_name == "" || distance2 >= TOLERANCE)
             closest_name = "_" + std::to_string(num);
         return closest_name;
+    }
+
+    void name_closest_points(pcl::PointCloud<pcl::PointXYZ>::Ptr center_points) {
+        double TOLERANCE = get_parameter("TOLERANCE").as_double();
+        // get closest point to the name
+        for (auto pair : _point_names) {
+            // RCLCPP_INFO(get_logger(), "___%s___", pair.first.c_str());
+            // find closest point, save point as closest
+            double distance2 = static_cast<double>(INT_MAX);
+            pcl::PointXYZ closest_point;
+            for (size_t pt = 0; pt < center_points->points.size(); pt++) {
+                double temp_dist2 = dist2(center_points->points[pt], pair.second.first);
+                if (temp_dist2 < distance2) {
+                    distance2 = temp_dist2;
+                    closest_point = center_points->points[pt];
+                }
+            }
+            // if that is within tolerance,
+            // publish that name
+            if (distance2 < TOLERANCE) {
+                geometry_msgs::msg::TransformStamped t;
+                t.header.stamp = this->get_clock()->now();
+                t.header.frame_id = "camera_link";
+                std::string name = pair.first;
+                t.child_frame_id = name;
+                t.transform.translation.x = closest_point.x;
+                t.transform.translation.y = closest_point.y;
+                t.transform.translation.z = closest_point.z;
+                // For rotation, some factor of pi/2 - angle helps
+                _object_location_broadcaster->sendTransform(t);
+            }
+        }
+        // Somehow name the others ?
     }
 };
 
@@ -272,3 +325,9 @@ int main(int argc, char* argv[]) {
     rclcpp::shutdown();
     return 0;
 }
+
+// KNOWN ISSUES
+/*
+If two objects are close together, it will assign the name to the leftmost object bc of the way it scans. 
+I could fix this by finding the closest point to a know point (swap the order of find closest)
+*/
