@@ -49,10 +49,9 @@ private:
         parse_cloud(initial_cloud);
     }
 
-    // Takes in the piped points and stores them with their names in a map
+    // Takes in piped points and parses the data into usuable format
     void _on_info(std_msgs::msg::String msg) {
         std::string data = msg.data;
-        // RCLCPP_INFO(get_logger(), "%s", data.c_str()); 
         size_t num_objects = std::count(data.begin(), data.end(), '[');
         for (size_t i = 0; i < num_objects; i++) {
             std::string object = data.substr(0, data.find(']'));
@@ -73,18 +72,17 @@ private:
         }
     }
 
+    // Publish Tfs, Cluster Clouds, publish center points
     void parse_cloud(sensor_msgs::msg::PointCloud2 initial_cloud) {
-        // RCLCPP_INFO(this->get_logger(), "STARTING");
         double TOLERANCE = get_parameter("TOLERANCE").as_double();
         std::vector<sensor_msgs::msg::PointCloud2> clusters;
         // convert to pcl cloud
         pcl::PCLPointCloud2::Ptr cloud(new pcl::PCLPointCloud2());
         pcl_conversions::toPCL(initial_cloud, *cloud);
-        // do euclidean grouping
-
+        // convert from pointcloud2 to pointcloud to then use algorithms on
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_conversion(new pcl::PointCloud<pcl::PointXYZ>());
         pcl::fromPCLPointCloud2(*cloud, *cloud_conversion);
-
+        // Do some basic distance parsing to cull unhelpful points
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_parsed(new pcl::PointCloud<pcl::PointXYZ>());
         double table_height = get_parameter("TABLE_HEIGHT").as_double();
         for (auto pt : cloud_conversion->points) {
@@ -92,7 +90,6 @@ private:
             if (pt.z < table_height && distance2 < MAX_DIST2)
                 cloud_parsed->push_back(pt);
         }
-
         pcl::PointCloud<pcl::PointXYZ>::Ptr object_cluster_cloud(new pcl::PointCloud<pcl::PointXYZ>());
         *object_cluster_cloud = *cloud_parsed;
         // REMOVE FLOOR
@@ -104,16 +101,13 @@ private:
         seg.setDistanceThreshold(TOLERANCE);
         seg.setInputCloud(object_cluster_cloud);
         seg.segment(*inliers, *coefficients);
-
+        // Remove the floor from the cloud
         pcl::ExtractIndices<pcl::PointXYZ> extract;
         extract.setInputCloud(object_cluster_cloud);
         extract.setIndices(inliers);
         extract.setNegative(true);
-
-
         pcl::PointCloud<pcl::PointXYZ>::Ptr removed_floor(new pcl::PointCloud<pcl::PointXYZ>);
         extract.filter(*removed_floor);
-
         // REMOVE TABLE
         pcl::PointCloud<pcl::PointXYZ>::Ptr removed_table(new pcl::PointCloud<pcl::PointXYZ>);
         if (get_parameter("REMOVE_FLOOR").as_bool()) {
@@ -122,18 +116,16 @@ private:
             seg.setDistanceThreshold(get_parameter("TOLERANCE").as_double());
             seg.setInputCloud(removed_floor);
             seg.segment(*inliers, *coefficients);
-
+            // Remove the table from the cloud
             extract.setInputCloud(removed_floor);
             extract.setIndices(inliers);
             extract.setNegative(true);
-
             extract.filter(*removed_table);
         }
         else {
             *removed_table = *removed_floor;
         }
-
-        //Extract clusters
+        // Extract clusters
         pcl::EuclideanClusterExtraction<pcl::PointXYZ> clusterer;
         pcl::search::KdTree<pcl::PointXYZ>::Ptr search_method(new pcl::search::KdTree<pcl::PointXYZ>);
         std::vector<pcl::PointIndices> cluster_vector;
@@ -142,9 +134,8 @@ private:
         clusterer.setMinClusterSize(get_parameter("MIN_CLUSTER_SIZE").as_int());
         clusterer.setMaxClusterSize(get_parameter("MAX_CLUSTER_SIZE").as_int());
         clusterer.setSearchMethod(search_method);
-
         clusterer.extract(cluster_vector);
-
+        // Find and publish cluster centers
         pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         pcl::PointCloud<pcl::PointXYZ>::Ptr output_centers(new pcl::PointCloud<pcl::PointXYZ>);
         for (auto cluster : cluster_vector) {
@@ -169,8 +160,7 @@ private:
         sensor_msgs::msg::PointCloud2 msg;
         pcl::toROSMsg(*output_cloud, msg);
         _publisher->publish(msg);
-
-        // Output final cloud
+        // Broadcast centers as tfs
         for (size_t point  = 0; point < output_centers->points.size(); point++) {
             geometry_msgs::msg::TransformStamped t;
             t.header.stamp = this->get_clock()->now();
@@ -183,6 +173,7 @@ private:
             // For rotation, some factor of pi/2 - angle helps
             _object_location_broadcaster->sendTransform(t);
         }
+        // output a cloud of just those centers as well (NOT NECESSARY)
         output_centers->width = output_centers->size();
         output_centers->height = 1;
         output_centers->is_dense = true;
@@ -190,7 +181,6 @@ private:
         sensor_msgs::msg::PointCloud2 msg_centers;
         pcl::toROSMsg(*output_centers, msg_centers);
         _publisher_centers->publish(msg_centers);
-        // RCLCPP_INFO(get_logger(), "ENDING");
     }
 
     void replace_closest(std::map<std::string, pcl::PointXYZ> &point_map, pcl::PointXYZ pt, std::string type) {
@@ -209,6 +199,7 @@ private:
                 type_count++;
             }
         }
+        // Keep names consistent, or make new ones if the object is new
         if (distance2 >= TOLERANCE) {
             point_map[type + "_" + std::to_string(type_count)] = pt;
         }
@@ -219,8 +210,6 @@ private:
         else {
             point_map[type + "_" + std::to_string(type_count)] = pt;
         }
-        // replace if within tolerance, else add new point
-        // RCLCPP_INFO(get_logger(), "%s", type.c_str()); 
     }
 
     double dist2(pcl::PointXYZ a, pcl::PointXYZ b) {
@@ -256,6 +245,7 @@ public:
         set_parameter(rclcpp::Parameter("REMOVE_FLOOR", true));
     }
     
+    // Gets the closest stored name for a cluster
     std::string get_closest_name(pcl::PointXYZ pt, size_t num) {
         double distance2 = static_cast<double>(INT_MAX); //
         double TOLERANCE = get_parameter("TOLERANCE").as_double();
