@@ -71,18 +71,6 @@ private:
             replace_closest(_point_names, pt, type);
             data = data.substr(data.find(']')+1);
         }
-        // for (auto pair : _point_names) {
-        //     // RCLCPP_INFO(get_logger(), "{%lf, %lf, %lf,\t%s}", pair.second.x, pair.second.y, pair.second.z, pair.first.c_str());
-        //     geometry_msgs::msg::TransformStamped t;
-        //     t.header.stamp = this->get_clock()->now();
-        //     t.header.frame_id = "camera_link";
-        //    t.child_frame_id = "test_" + std::to_string(pair.second.x);
-        //     t.transform.translation.x = pair.second.x;
-        //     t.transform.translation.y = pair.second.y;
-        //     t.transform.translation.z = pair.second.z;
-        //     // For rotation, some factor of pi/2 - angle helps
-        //     _object_location_broadcaster->sendTransform(t);
-        // }
     }
 
     void parse_cloud(sensor_msgs::msg::PointCloud2 initial_cloud) {
@@ -107,7 +95,6 @@ private:
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr object_cluster_cloud(new pcl::PointCloud<pcl::PointXYZ>());
         *object_cluster_cloud = *cloud_parsed;
-        // TODO: Do negative of table plane, publish object tfs
         // REMOVE FLOOR
         pcl::SACSegmentation<pcl::PointXYZ> seg;
         pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
@@ -162,17 +149,11 @@ private:
         pcl::PointCloud<pcl::PointXYZ>::Ptr output_centers(new pcl::PointCloud<pcl::PointXYZ>);
         for (auto cluster : cluster_vector) {
             pcl::PointXYZ center_point;
-            // center_point.r = rand() % 256;
-            // center_point.g = rand() % 256;
-            // center_point.b = rand() % 256;
             for (auto index : cluster.indices) {
                 pcl::PointXYZ pt = removed_table->points[index];
                 center_point.x += pt.x;
                 center_point.y += pt.y;
                 center_point.z += pt.z;
-                // pt.r = 255 - center_point.r;
-                // pt.g = 255 - center_point.g;
-                // pt.b = 255 - center_point.b;
                 output_cloud->push_back(pt);
             }
             center_point.x /= cluster.indices.size();
@@ -301,7 +282,3 @@ int main(int argc, char* argv[]) {
     rclcpp::shutdown();
     return 0;
 }
-
-// Ros2 open ni driver [X]
-// yolo 5 object classification [X]
-// parsing image coordinates to object tfs [X]
