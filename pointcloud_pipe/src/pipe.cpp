@@ -26,16 +26,14 @@ private:
         // convert to pcl cloud
         pcl::PCLPointCloud2::Ptr cloud_pcl(new pcl::PCLPointCloud2());
         pcl_conversions::toPCL(cloud, *cloud_pcl);
-        // do euclidean grouping
-
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_conversion(new pcl::PointCloud<pcl::PointXYZ>());
         pcl::fromPCLPointCloud2(*cloud_pcl, *cloud_conversion);
-        
+        // Do downsampling
         pcl::VoxelGrid<pcl::PointXYZ> downsampling;
         downsampling.setInputCloud(cloud_conversion);
         downsampling.setLeafSize(0.005, 0.005, 0.005);
         downsampling.filter(*cloud_conversion);
-
+        // Publish downsampled cloud to topic
         cloud_conversion->width = cloud_conversion->size();
         cloud_conversion->height = 1;
         cloud_conversion->is_dense = true;
@@ -50,24 +48,22 @@ private:
         if (data == "{}")
             return objects_types;
         std::map<std::pair<int, int>, std::string> type_locations;
-        data = data.substr(1,data.length()-2);// remove curly braces
+        // remove curly braces
+        data = data.substr(1,data.length()-2);
         size_t num_objects = std::count(data.begin(), data.end(), ',') / 2 + 1;
         for (size_t i = 0; i < num_objects; i++) {
             std::pair<int, int> coords;
             int second_comma = data.find(',', data.find(',')+1);
             std::string object = data.substr(0, second_comma);
             data = data.substr(second_comma+1);
-            // RCLCPP_INFO(get_logger(), "%s", object.c_str());
             // get ints between parens
             coords.first = std::stoi(object.substr(object.find('(')+1, object.find(',')));
             coords.second = std::stoi(object.substr(object.find(',')+1, object.find(')')));
-            // RCLCPP_INFO(get_logger(), "FOUND COORDS: [%d, %d]", coords.first, coords.second);
             // get string in between '' 
             object = object.substr(object.find('\'') + 1);
             object = object.substr(0, object.find('\''));
             type_locations[coords] = object;
         }
-        // RCLCPP_INFO(get_logger(), "%ld, %s", num_objects, data.c_str());
         std_msgs::msg::String locations;
         locations.data = "";
         for (auto p : type_locations) {
@@ -75,9 +71,7 @@ private:
             pcl_conversions::toPCL(_cloud, *cloud);
             pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_conversion(new pcl::PointCloud<pcl::PointXYZ>());
             pcl::fromPCLPointCloud2(*cloud, *cloud_conversion);
-            // RCLCPP_INFO(get_logger(), "DIMENSIONS: %ld, %ld", cloud_conversion->width, cloud_conversion->height);
             pcl::PointXYZ pt = cloud_conversion->points[p.first.first + p.first.second * cloud_conversion->width];
-            // RCLCPP_INFO(get_logger(), "%lf, %lf, %lf", pt.x, pt.y, pt.z);
             locations.data += "[" + p.second + ": (" + std::to_string(pt.x) + " " + std::to_string(pt.y)  + " " + std::to_string(pt.z) + ")]\n";
         }
         _publisher_info->publish(locations);
