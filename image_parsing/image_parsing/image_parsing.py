@@ -11,7 +11,7 @@ from std_msgs.msg import String
 from cv_bridge import CvBridge
 bridge = CvBridge()
 
-model = YOLO('/home/max_cohn/pointcloud_ws/src/image_parsing/image_parsing/yolo-cube-ball-screwdriver.pt')
+model = YOLO('/home/max_cohn/pointcloud_ws/src/image_parsing/image_parsing/yolo-cube-ball-screwdriver-drill.pt')
 
 class ObjectClassifier(Node):
     def __init__(self):
