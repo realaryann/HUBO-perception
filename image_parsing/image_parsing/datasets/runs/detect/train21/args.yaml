@@ -11,11 +11,11 @@ save: true
 save_period: -1
 cache: false
 device:
-- 3
-- 4
+- 0
+- 2
 workers: 1
 project: null
-name: train13
+name: train21
 exist_ok: false
 pretrained: true
 optimizer: auto
@@ -105,4 +105,4 @@ erasing: 0.4
 crop_fraction: 1.0
 cfg: null
 tracker: botsort.yaml
-save_dir: runs/detect/train13
+save_dir: runs/detect/train21
