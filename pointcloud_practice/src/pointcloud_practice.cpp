@@ -9,7 +9,6 @@
 #include "pcl/filters/voxel_grid.h"
 
 #include <chrono>
-
 #include "tf2_ros/transform_broadcaster.h"
 
 #include <cstdlib>
@@ -69,7 +68,7 @@ private:
             if (object.substr(0, object.find(')')) != "nan")
                 pt.z = std::stof(object.substr(0, object.find(')'))); 
             // bc of these if statements the top left object will be named whatever is nan
-            _point_names[type] = pt;
+            replace_closest(_point_names, pt, type);
             data = data.substr(data.find(']')+1);
         }
         // for (auto pair : _point_names) {
@@ -212,6 +211,41 @@ private:
         _publisher_centers->publish(msg_centers);
         // RCLCPP_INFO(get_logger(), "ENDING");
     }
+
+    void replace_closest(std::map<std::string, pcl::PointXYZ> &point_map, pcl::PointXYZ pt, std::string type) {
+        // find closest point
+        double TOLERANCE = get_parameter("TOLERANCE").as_double();
+        double distance2 = static_cast<double>(INT_MAX);
+        std::pair<std::string, pcl::PointXYZ> closest_pt;
+        size_t type_count = 0;
+        for (auto pair : point_map) {
+            double temp_dist2 = dist2(pair.second, pt);
+            if (temp_dist2 < distance2) {
+                distance2 = temp_dist2;
+                closest_pt = pair;
+            }
+            if (pair.first.substr(0, pair.first.find("_")) == type) {
+                type_count++;
+            }
+        }
+        if (distance2 >= TOLERANCE) {
+            point_map[type + "_" + std::to_string(type_count)] = pt;
+        }
+        else if (closest_pt.first.substr(0, closest_pt.first.find("_")) == type) {
+            point_map.erase(closest_pt.first);
+            point_map[closest_pt.first] = pt;
+        }
+        else {
+            point_map[type + "_" + std::to_string(type_count)] = pt;
+        }
+        // replace if within tolerance, else add new point
+        RCLCPP_INFO(get_logger(), "%s", type.c_str()); 
+    }
+
+    double dist2(pcl::PointXYZ a, pcl::PointXYZ b) {
+        return pow(b.x - a.x, 2) + pow(b.y - a.y, 2) + pow(b.z - a.z, 2);
+    }
+    
 public:
     PointCloudParser() : Node("pointcloud_parser") {
         using namespace std::chrono_literals;
@@ -246,7 +280,7 @@ public:
         double TOLERANCE = get_parameter("TOLERANCE").as_double();
         std::string closest_name;
         for (auto pair : _point_names) {
-            double temp2 = pow(pt.x - pair.second.x, 2) + pow(pt.y - pair.second.y, 2) + pow(pt.z-pair.second.z, 2);
+            double temp2 = dist2(pair.second, pt); // pow(pt.x - pair.first.x, 2) + pow(pt.y - pair.first.y, 2) + pow(pt.z-pair.first.z, 2);
             if (temp2 < distance2) {
                 distance2 = temp2;
                 closest_name = pair.first;
@@ -254,11 +288,6 @@ public:
         }
         if (closest_name == "" || distance2 >= TOLERANCE)
             closest_name = "_" + std::to_string(num);
-        else {
-            _point_names.erase(closest_name);
-            closest_name += "_" + std::to_string(num);
-            // RCLCPP_INFO(get_logger(), "%s", closest_name.c_str());
-        }
         return closest_name;
     }
 };
