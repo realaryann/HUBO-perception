@@ -220,7 +220,7 @@ private:
             point_map[type + "_" + std::to_string(type_count)] = pt;
         }
         // replace if within tolerance, else add new point
-        RCLCPP_INFO(get_logger(), "%s", type.c_str()); 
+        // RCLCPP_INFO(get_logger(), "%s", type.c_str()); 
     }
 
     double dist2(pcl::PointXYZ a, pcl::PointXYZ b) {
