@@ -228,8 +228,9 @@ private:
     void remove_all_except(std::map<std::string, std::pair<pcl::PointXYZ, rclcpp::Time>>& map, std::vector<std::string> not_to_be_removed) {
         std::vector<std::string> to_remove;
         rclcpp::Time current_time = this->get_clock()->now();
+        int LIFETIME = get_parameter("LIFETIME").as_int();
         for (auto pair : map) {
-            if (std::find(not_to_be_removed.begin(), not_to_be_removed.end(), pair.first) == not_to_be_removed.end() && (current_time.nanoseconds() - pair.second.second.nanoseconds() > 3e9f))
+            if (std::find(not_to_be_removed.begin(), not_to_be_removed.end(), pair.first) == not_to_be_removed.end() && (current_time.nanoseconds() - pair.second.second.nanoseconds() > LIFETIME))
                 to_remove.push_back(pair.first);
         }
         for (std::string str : to_remove)
@@ -257,11 +258,13 @@ public:
         declare_parameter<double>("TABLE_HEIGHT");
         declare_parameter<double>("TOLERANCE");
         declare_parameter<bool>("REMOVE_FLOOR");
+        declare_parameter<int>("LIFETIME");
         set_parameter(rclcpp::Parameter("MIN_CLUSTER_SIZE", 50));
         set_parameter(rclcpp::Parameter("MAX_CLUSTER_SIZE", 1000));
         set_parameter(rclcpp::Parameter("TABLE_HEIGHT", 2.1));
         set_parameter(rclcpp::Parameter("TOLERANCE", 0.01));
         set_parameter(rclcpp::Parameter("REMOVE_FLOOR", true));
+        set_parameter(rclcpp::Parameter("LIFETIME", 5 * 1e9));
     }
     
     // Gets the closest stored name for a cluster
