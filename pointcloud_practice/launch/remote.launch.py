@@ -25,7 +25,7 @@ def generate_launch_description():
                 {'TABLE_HEIGHT' : 10.0},
                 {'TOLERANCE' : 0.01},
                 {'REMOVE_FLOOR' : False},
-                {'LIFETIME' : 5e9},
+                {'LIFETIME' : 5_000_000_000},
             ],
         ),
         Node(

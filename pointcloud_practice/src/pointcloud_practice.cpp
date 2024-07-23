@@ -331,6 +331,5 @@ int main(int argc, char* argv[]) {
 
 // KNOWN ISSUES
 /*
-If two objects are close together, it will assign the name to the leftmost object bc of the way it scans. 
-I could fix this by finding the closest point to a know point (swap the order of find closest)
+If two objects are close together, objects sort of name incorrectly
 */
