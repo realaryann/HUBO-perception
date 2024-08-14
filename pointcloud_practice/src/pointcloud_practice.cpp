@@ -87,7 +87,7 @@ private:
         // Do some basic distance parsing to cull unhelpful points
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_parsed(new pcl::PointCloud<pcl::PointXYZ>());
         double table_height = get_parameter("TABLE_HEIGHT").as_double();
-        for (auto pt : cloud_conversion->points) {
+        for (auto& pt : cloud_conversion->points) {
             float distance2 = pt.x * pt.x + pt.y * pt.y + pt.z * pt.z;
             if (pt.z < table_height && distance2 < MAX_DIST2)
                 cloud_parsed->push_back(pt);
@@ -140,7 +140,7 @@ private:
         // Find and publish cluster centers
         pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         pcl::PointCloud<pcl::PointXYZ>::Ptr output_centers(new pcl::PointCloud<pcl::PointXYZ>);
-        for (auto cluster : cluster_vector) {
+        for (auto& cluster : cluster_vector) {
             pcl::PointXYZ center_point;
             for (auto index : cluster.indices) {
                 pcl::PointXYZ pt = removed_table->points[index];
@@ -193,7 +193,7 @@ private:
         double distance2 = static_cast<double>(INT_MAX);
         std::pair<std::string, std::pair<pcl::PointXYZ, rclcpp::Time>> closest_pt;
         size_t type_count = 0;
-        for (auto pair : point_map) {
+        for (auto& pair : point_map) {
             double temp_dist2 = dist2(pair.second.first, pt);
             if (temp_dist2 < distance2) {
                 distance2 = temp_dist2;
@@ -229,7 +229,7 @@ private:
         std::vector<std::string> to_remove;
         rclcpp::Time current_time = this->get_clock()->now();
         int LIFETIME = get_parameter("LIFETIME").as_int();
-        for (auto pair : map) {
+        for (auto& pair : map) {
             if (std::find(not_to_be_removed.begin(), not_to_be_removed.end(), pair.first) == not_to_be_removed.end() && (current_time.nanoseconds() - pair.second.second.nanoseconds() > LIFETIME))
                 to_remove.push_back(pair.first);
         }
@@ -273,7 +273,7 @@ public:
         double distance2 = static_cast<double>(INT_MAX); //
         double TOLERANCE = get_parameter("TOLERANCE").as_double();
         std::string closest_name;
-        for (auto pair : _point_names) {
+        for (auto& pair : _point_names) {
             double temp2 = dist2(pair.second.first, pt); // pow(pt.x - pair.first.x, 2) + pow(pt.y - pair.first.y, 2) + pow(pt.z-pair.first.z, 2);
             if (temp2 < distance2) {
                 distance2 = temp2;
@@ -288,7 +288,7 @@ public:
     void name_closest_points(pcl::PointCloud<pcl::PointXYZ>::Ptr center_points) {
         double TOLERANCE = get_parameter("TOLERANCE").as_double();
         // get closest point to the name
-        for (auto pair : _point_names) {
+        for (auto& pair : _point_names) {
             // RCLCPP_INFO(get_logger(), "___%s___", pair.first.c_str());
             // find closest point, save point as closest
             double distance2 = static_cast<double>(INT_MAX);
