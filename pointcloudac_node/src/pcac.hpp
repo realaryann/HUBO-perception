@@ -1,6 +1,7 @@
 #include <string>
 #include "rclcpp/rclcpp.hpp"
-#include "behaviortree_cpp/bt_factory.h"
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include "behaviortree_ros2/bt_topic_checker_node.hpp"
 
 /*
 AC for pointcloud updation
@@ -8,26 +9,26 @@ Check if the most recent pointcloud is different from the last pointcloud, and r
 */
 using namespace BT;
 
-class ac_pointcloud: public BT::AssumptionCheckerNode {
-
- private:
- auto pointcloud;
- auto prev;
-
+class ac_pointcloud: public RosTopicSubCheckerNode<sensor_msgs::msg::PointCloud2> {
  public:
- ac_pointcloud(const std::string& name, const NodeConfig& conf): BT::AssumptionCheckerNOde(name, conf) {}
+ ac_pointcloud(
+  const std::string& name, const NodeConfig& conf,  const RosNodeParams& params): 
+  RosTopicSubCHeckerNode<sensor_msgs::msg::PointCloud2>(name, conf, params)
+  {}
 
- BT::NodeStatus tick() override {
+  static BT::PortsList providedPorts() {
+    return providedBasicPorts({InputPort<std::string>("filtered_point_cloud")});
+  }
 
-    Expected<geometry_msgs::msg::PoseStamped> object_pose = getInput<geometry_msgs::msg::PoseStamped>("object_pose");
-
-    if() {
-     // RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "[%f]", object_pose.value().pose.position.z);
-      return BT::NodeStatus::SUCCESS;
+  NodeStatus onTick(const std::shared_ptr<sensor_msgs::msg::PointCloud2>& last_msg) override {
+    if(last_msg) {
+      RCLCPP_INFO(logger(), "[%s] UPDATE!", name().c_str());
+      return NodeStatus::SUCCESS;
     }
-    else{
-      // RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "NOT ON TABLE");
-      return BT::NodeStatus::FAILURE;
+    else {
+      
+      RCLCPP_INFO(logger(), "NO UPDATE: %s", topic_name_.c_str());
+      return NodeStatus::FAILURE;
     }
   }
 
